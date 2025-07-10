@@ -10,7 +10,18 @@
   <header>
     <img src="images/logo_transparent.png" alt="Logo" class="logo">
   </header>
+<!-- Lock Icon -->
+<div id="lock-container">
+  <button id="lock-btn" title="Geschützter Bereich">
+    🔒
+  </button>
+</div>
 
+<!-- Geschützter Bereich (initial versteckt) -->
+<div id="protected-area" class="hidden">
+  <h2>Geheimer Bereich</h2>
+  <p>Hier stehen deine privaten Infos.</p>
+</div>
   <form action="https://www.google.com/search" method="get" class="search-form">
     <div class="search-wrapper">
       <img src="images/google_g_fullcolor.svg" alt="Google" class="google-icon">
@@ -86,5 +97,22 @@
       <span>NAS</span>
     </a>
   </section>
+  <script>
+  (function(){
+    const lockBtn = document.getElementById('lock-btn');
+    const protectedArea = document.getElementById('protected-area');
+    const SECRET_CODE = '540791';  // <— hier deinen Wunsch-Code festlegen
+
+    lockBtn.addEventListener('click', () => {
+      const userCode = prompt('Bitte Code eingeben, um den Bereich freizuschalten:');
+      if (userCode === SECRET_CODE) {
+        protectedArea.classList.remove('hidden');
+        lockBtn.textContent = '🔓';  // Schloss-Icon in geöffnetes Schloss wandeln
+      } else if (userCode !== null) {
+        alert('Falscher Code!');
+      }
+    });
+  })();
+</script>
 </body>
 </html>
