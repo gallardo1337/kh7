@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Kevin Harasim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="weather-info"></div>
+<div id="weather-panel" class="hidden"></div>
+  <header>
+    <img src="images/logo_transparent.png" alt="Logo" class="logo">
+  </header>
+
+  <form action="https://www.google.com/search" method="get" class="search-form">
+    <div class="search-wrapper">
+      <img src="images/google_g_fullcolor.svg" alt="Google" class="google-icon">
+      <input type="text" name="q" class="search-input" placeholder=" ">
+      <button type="submit" class="search-button" aria-label="Suche">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+    </div>
+  </form>
+
+  <section class="tiles">
+    <!-- Öffentliche Tiles -->
+    <a href="https://chat.openai.com" class="tile openai-tile">
+      <img src="https://cdn.simpleicons.org/openai/FFFFFF" alt="ChatGPT">
+      <span>ChatGPT</span>
+    </a>
+    <a href="https://instagram.com" class="tile insta-tile">
+      <img src="https://cdn.simpleicons.org/instagram/FFFFFF" alt="Instagram">
+      <span>Instagram</span>
+    </a>
+    <a href="https://twitter.com" class="tile twitter-tile">
+      <img src="https://cdn.simpleicons.org/x/FFFFFF" alt="Twitter">
+      <span>Twitter</span>
+    </a>
+    <a href="https://youtube.com" class="tile yt-tile">
+      <img src="https://cdn.simpleicons.org/youtube/FFFFFF" alt="YouTube">
+      <span>YouTube</span>
+    </a>
+    <a href="https://www.twitch.tv" class="tile twitch-tile">
+      <img src="https://cdn.simpleicons.org/twitch/FFFFFF" alt="Twitch">
+      <span>Twitch</span>
+    </a>
+    <a href="https://www.cardmarket.com" class="tile cardmarket-tile">
+      <img src="https://cdn.simpleicons.org/cardmarket/FFFFFF" alt="Cardmarket">
+      <span>Cardmarket</span>
+    </a>
+    <a href="https://www.kicker.de" class="tile kicker-tile">
+      <img src="images/kicker_k_white.png" alt="Kicker">
+      <span>Kicker</span>
+    </a>
+    <a href="https://www.bild.de" class="tile bild-tile">
+      <img src="images/bild_white.png" alt="Bild">
+      <span>Bild</span>
+    </a>
+    <a href="https://amazon.de" class="tile amazon-tile">
+      <img src="https://img.icons8.com/ios-filled/50/ffffff/amazon.png" alt="Amazon">
+      <span>Amazon</span>
+    </a>
+    <a href="https://facebook.com" class="tile fb-tile">
+      <img src="https://cdn.simpleicons.org/facebook/FFFFFF" alt="Facebook">
+      <span>Facebook</span>
+    </a>
+    <a href="https://www.mydealz.de" class="tile mydealz-tile">
+      <img src="images/mydealz_two_tone.png" alt="Mydealz">
+      <span>mydealz</span>
+    </a>
+    <a href="http://QuickConnect.to/ikanoNAS" class="tile nas-tile">
+      <img src="https://img.icons8.com/ios-filled/50/ffffff/server.png" alt="NAS">
+      <span>NAS</span>
+    </a>
+    <a href="https://www.reddit.com" class="tile reddit-tile">
+      <img src="https://cdn.simpleicons.org/reddit/FFFFFF" alt="Reddit">
+      <span>Reddit</span>
+    </a>
+
+    <!-- Geschützte Tiles (zunächst versteckt) -->
+    <a href="https://www.onlyfans.com" class="tile onlyfans-tile protected hidden">
+      <img src="https://cdn.simpleicons.org/onlyfans/FFFFFF" alt="Onlyfans">
+      <span>Onlyfans</span>
+    </a>
+    <a href="https://www.planetsuzy.org" class="tile planetsuzy-tile protected hidden">
+      <img src="images/xxx.png" alt="18+">
+      <span>Planetsuzy</span>
+    </a>
+    <a href="https://www.pornbb.org" class="tile pornbb-tile protected hidden">
+      <img src="images/xxx.png" alt="18+">
+      <span>pornBB</span>
+    </a>
+  </section>
+
+  <!-- Lock-Button & Uhr -->
+  <div id="lock-container">
+    <span id="clock" style="margin-right:18px; cursor:pointer;" title="Sortierung zurücksetzen"></span>
+    <button id="lock-btn" title="Geschützter Bereich">🔒</button>
+  </div>
+
+  <!-- Scripts (Unlock, Uhr, Wetter, Drag&Drop) -->
+  <script>
+    (function(){
+      const lockBtn = document.getElementById('lock-btn');
+      const SECRET_CODE = '540791';
+      lockBtn.addEventListener('click', () => {
+        const userCode = prompt('Bitte Code eingeben, um den Bereich freizuschalten:');
+        if (userCode === SECRET_CODE) {
+          document.querySelectorAll('.protected').forEach(el => el.classList.remove('hidden'));
+          lockBtn.textContent = '🔓';
+          document.documentElement.style.setProperty('--highlight-color', '#ff0000');
+          const logo = document.querySelector('.logo');
+          logo.src = 'images/logo_red.png';
+          logo.classList.remove('flash');
+          void logo.offsetWidth;
+          logo.classList.add('flash');
+        } else if (userCode !== null) {
+          alert('Falscher Code!');
+        }
+      });
+    })();
+  </script>
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, "0");
+      const m = String(now.getMinutes()).padStart(2, "0");
+      document.getElementById('clock').textContent = h + ":" + m;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Klick auf die Uhr löscht die Sortierung
+    document.getElementById('clock').onclick = function() {
+      if (confirm('Sortierung der Kacheln zurücksetzen?')) {
+        localStorage.removeItem('tilesOrder');
+        location.reload();
+      }
+    };
+  </script>
+  <script>
+    const tiles = document.querySelector('.tiles');
+    function enableDragAndDrop() {
+      let dragged = null;
+      tiles.querySelectorAll('.tile').forEach(tile => {
+        tile.setAttribute('draggable', 'true');
+        tile.ondragstart = function(e) {
+          dragged = this;
+          this.classList.add('dragging');
+          e.dataTransfer.effectAllowed = "move";
+        };
+        tile.ondragend = function() {
+          this.classList.remove('dragging');
+        };
+        tile.ondragover = function(e) {
+          e.preventDefault();
+          this.classList.add('drag-over');
+        };
+        tile.ondragleave = function() {
+          this.classList.remove('drag-over');
+        };
+        tile.ondrop = function(e) {
+          e.preventDefault();
+          this.classList.remove('drag-over');
+          if (dragged && dragged !== this) {
+            const draggedNext = dragged.nextSibling;
+            const thisNext = this.nextSibling;
+            const parent = tiles;
+            parent.insertBefore(dragged, this);
+            if (draggedNext === this) {
+              parent.insertBefore(this, dragged);
+            } else {
+              parent.insertBefore(this, draggedNext);
+            }
+            saveTileOrder();
+            enableDragAndDrop();
+          }
+          dragged = null;
+        };
+      });
+    }
+    function saveTileOrder() {
+      const order = Array.from(tiles.children).map(tile => tile.outerHTML);
+      localStorage.setItem('tilesOrder', JSON.stringify(order));
+    }
+    function loadTileOrder() {
+      const order = JSON.parse(localStorage.getItem('tilesOrder') || "[]");
+      if (order.length) {
+        tiles.innerHTML = "";
+        order.forEach(html => tiles.insertAdjacentHTML('beforeend', html));
+        tiles.querySelectorAll('.tile').forEach(tile => {
+          tile.classList.remove('drag-over', 'dragging');
+        });
+      }
+      enableDragAndDrop();
+    }
+    loadTileOrder();
+  </script>
+<script>
+const weatherDiv = document.getElementById('weather-info');
+const weatherPanel = document.getElementById('weather-panel');
+let panelOpen = false;
+
+// Aktuelles Wetter anzeigen
+fetch('https://api.open-meteo.com/v1/forecast?latitude=51.6187&longitude=7.5287&current=temperature_2m,weathercode')
+  .then(res => res.json())
+  .then(data => {
+    const temp = data.current.temperature_2m;
+    const code = data.current.weathercode;
+    let icon = "☀️";
+    if ([1, 2, 3].includes(code)) icon = "🌤️";
+    if ([45, 48].includes(code)) icon = "🌫️";
+    if ([51, 53, 55, 56, 57].includes(code)) icon = "🌦️";
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) icon = "🌧️";
+    if ([71, 73, 75, 77, 85, 86].includes(code)) icon = "❄️";
+    if ([95, 96, 99].includes(code)) icon = "⛈️";
+    weatherDiv.innerHTML = `<span class="weather-emoji">${icon}</span> ${temp}&deg;C`;
+  })
+  .catch(() => {
+    weatherDiv.textContent = "n/a";
+  });
+
+weatherDiv.style.cursor = "pointer";
+weatherDiv.title = "Klicke für mehr Wetter!";
+
+weatherDiv.onclick = function() {
+  if (!panelOpen) {
+    weatherPanel.classList.remove('hidden');
+    weatherPanel.classList.add('show');
+    if (!weatherPanel.innerHTML.trim()) fetchForecast();
+  } else {
+    weatherPanel.classList.remove('show');
+    weatherPanel.classList.add('hidden');
+  }
+  panelOpen = !panelOpen;
+};
+
+function fetchForecast() {
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=51.6187&longitude=7.5287&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FBerlin')
+    .then(res => res.json())
+    .then(data => {
+      let out = `<div style="margin-bottom:7px;font-weight:bold;">Vorhersage</div>`;
+      for(let i=0; i<5; ++i) {
+        const date = new Date(data.daily.time[i]);
+        const weekday = date.toLocaleDateString('de-DE', { weekday: 'short' });
+        const max = Math.round(data.daily.temperature_2m_max[i]);
+        const min = Math.round(data.daily.temperature_2m_min[i]);
+        const code = data.daily.weathercode[i];
+        let icon = "☀️";
+        if ([1,2,3].includes(code)) icon = "🌤️";
+        if ([45,48].includes(code)) icon = "🌫️";
+        if ([51,53,55,56,57].includes(code)) icon = "🌦️";
+        if ([61,63,65,66,67,80,81,82].includes(code)) icon = "🌧️";
+        if ([71,73,75,77,85,86].includes(code)) icon = "❄️";
+        if ([95,96,99].includes(code)) icon = "⛈️";
+        out += `<div class="forecast-day"><span>${weekday}</span><span style="font-size:1.3em">${icon}</span> <span>${max}°/${min}°</span></div>`;
+      }
+      weatherPanel.innerHTML = out;
+    })
+    .catch(() => {
+      weatherPanel.innerHTML = "<div>Fehler beim Laden der Wetterdaten.</div>";
+    });
+}
+</script>
+</body>
+</html>

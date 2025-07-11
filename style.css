@@ -1,0 +1,303 @@
+:root {
+  --container-max-width: 1000px;
+  --search-max-width: 600px;
+  --tiles-gap: 16px;
+  --tiles-margin-top: 100px;
+  --tile-icon-size: 40px;
+  --highlight-color: #00ff00;
+}
+
+body {
+  background-color: #1a1a1a;
+  color: #fff;
+  font-family: sans-serif;
+  margin: 0;
+  padding: 100px 0 0;
+  text-align: center;
+}
+
+.logo {
+  width: 300px;
+  max-width: 90%;
+  margin: 0 auto;
+  display: block;
+  animation: fadeIn 2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.search-form {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: var(--search-max-width);
+  margin: 0 auto;
+}
+
+.google-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 48px;
+  font-size: 1.1em;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 30px;
+  background: transparent;
+  color: #fff;
+  outline: none;
+  box-sizing: border-box;
+  backdrop-filter: blur(4px);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: var(--highlight-color);
+  box-shadow: 0 0 8px var(--highlight-color);
+}
+
+.search-button {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+  transition: transform 0.2s ease;
+}
+
+.search-button:hover svg {
+  transform: scale(1.1);
+}
+
+/* Kachel-Grid: auto-fit und max-width für gleichmäßige Kachelgrößen */
+.tiles {
+  margin: var(--tiles-margin-top) auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--tiles-gap);
+  width: 100%;
+  max-width: var(--container-max-width);
+  justify-items: center;
+}
+
+.tile {
+  max-width: 210px;
+  width: 100%;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  border: 2px solid transparent;
+  position: relative;
+  z-index: 1;
+  padding: 12px;
+  text-decoration: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  box-sizing: border-box;
+  justify-self: center;
+  overflow: visible;
+}
+
+.tile img,
+.tile-svg-icon {
+  width: var(--tile-icon-size, 40px);
+  height: var(--tile-icon-size, 40px);
+  object-fit: contain;
+}
+
+.tile span {
+  margin-left: 8px;
+  font-size: 0.95em;
+}
+
+.tile:hover {
+  transform: translateY(-2px);
+}
+
+/* Radiale Farbverläufe für alle Hauptkacheln */
+.insta-tile:hover      { background: #df4996; color: #fff; }
+.fb-tile:hover         { background: #1877f3; color: #fff; }
+.reddit-tile:hover     { background: #ff4500; color: #fff; }
+.twitter-tile:hover    { background: #1da1f2; color: #fff; }
+.yt-tile:hover         { background: #ff0000; color: #fff; }
+.twitch-tile:hover     { background: #9146ff; color: #fff; }
+.amazon-tile:hover     { background: #ff9900; color: #fff; }
+.cardmarket-tile:hover { background: #003366; color: #fff; }
+.mydealz-tile:hover    { background: #4dc431; color: #fff; }
+.kicker-tile:hover     { background: #d60018; color: #fff; }
+.bild-tile:hover       { background: #ed1c24; color: #fff; }
+.nas-tile:hover        { background: #0051ff; color: #fff; }
+.openai-tile:hover     { background: #10a37f; color: #fff; }
+/* GESCHÜTZTE */
+.onlyfans-tile:hover   { background: #00aff0; color: #fff; }
+.planetsuzy-tile:hover { background: #e60dc9; color: #fff; }
+.pornbb-tile:hover     { background: #ab47bc; color: #fff; }
+/* Spezielle Bildgrößenanpassung */
+.mydealz-tile img {
+  transform: scale(1.2);
+  transform-origin: center center;
+}
+.kicker-tile img {
+  transform: scale(1.3);
+  transform-origin: center center;
+}
+.tile img[alt="18+"] {
+  filter: invert(1) brightness(2);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Wetter oben links */
+#weather-info {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 999;
+  font-size: 1.08em;
+  color: #fff;
+  background: rgba(20,20,20,0.7);
+  padding: 4px 14px 4px 10px;
+  border-radius: 20px;
+  font-family: monospace, monospace;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.88;
+  min-width: 66px;
+}
+#weather-info .weather-emoji {
+  font-size: 1.15em;
+  margin-right: 2px;
+}
+#weather-panel {
+  position: fixed;
+  top: 56px;
+  left: 18px;
+  background: rgba(20,20,20,0.95);
+  color: #fff;
+  border-radius: 18px;
+  padding: 12px 20px 12px 20px;
+  z-index: 1000;
+  box-shadow: 0 8px 18px #0005;
+  min-width: 180px;
+  display: none;
+  font-size: 0.97em;
+  text-align: left;
+  transition: opacity 0.3s;
+}
+#weather-panel.show {
+  display: block;
+}
+#weather-panel .forecast-day {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 7px;
+}
+#weather-panel .forecast-day:last-child {
+  margin-bottom: 0;
+}
+/* Lock-Button oben rechts */
+#lock-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 999;
+}
+
+#lock-btn {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #ccc;
+  transition: color 0.2s;
+}
+#lock-btn:hover {
+  color: #fff;
+}
+
+#clock {
+  font-size: 1.15em;
+  color: #fff;
+  opacity: 0.75;
+  letter-spacing: 1px;
+  font-family: monospace, monospace;
+  vertical-align: middle;
+  user-select: none;
+  cursor: pointer;
+}
+
+/* Drag & Drop Styles */
+.tile.dragging {
+  opacity: 0.5;
+  border: 2px dashed #fff;
+}
+.tile.drag-over {
+  outline: 2px solid #00ff00;
+}
+
+/* Animiertes Logo beim Unlock */
+@keyframes logo-flash {
+  0%   { filter: brightness(1.5) drop-shadow(0 0 24px #fff4); }
+  40%  { filter: brightness(2.2) drop-shadow(0 0 50px #fffa); }
+  65%  { filter: brightness(2.0) drop-shadow(0 0 32px #f004); }
+  100% { filter: brightness(1) drop-shadow(0 0 0 #0000); }
+}
+.logo.flash {
+  animation: logo-flash 1s ease;
+}
+
+/* Responsive: 2 Spalten auf Mobile */
+@media (max-width: 600px) {
+  .search-wrapper {
+    width: 90%;
+    max-width: none;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(2, 1fr);
+    width: 90%;
+    max-width: none;
+    gap: 12px;
+    margin-top: 60px;
+  }
+
+  :root {
+    --tile-icon-size: 32px;
+  }
+}
