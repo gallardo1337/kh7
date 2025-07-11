@@ -301,3 +301,63 @@ body {
     --tile-icon-size: 32px;
   }
 }
+#unlock-modal {
+  position: fixed;
+  z-index: 99999;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#unlock-modal.hidden { display: none; }
+#unlock-modal .modal-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(2px);
+}
+#unlock-modal .modal-content {
+  position: relative;
+  z-index: 1;
+  background: #222;
+  color: #fff;
+  padding: 28px 24px 20px 24px;
+  border-radius: 14px;
+  min-width: 220px;
+  box-shadow: 0 10px 30px #0008;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+#unlock-input {
+  font-size: 1.2em;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+  width: 140px;
+  text-align: center;
+  outline: none;
+  margin-top: 2px;
+  transition: border 0.2s;
+}
+#unlock-input.error {
+  border: 1.8px solid #ff4444;
+  background: #311c1c;
+  color: #ff8888;
+}
+#unlock-confirm, #unlock-cancel {
+  font-size: 1em;
+  padding: 7px 20px;
+  border-radius: 7px;
+  border: none;
+  background: var(--highlight-color, #ff0000);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#unlock-cancel {
+  background: #333;
+  color: #aaa;
+  margin-left: 8px;
+}
