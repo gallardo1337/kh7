@@ -10,6 +10,17 @@
 <div id="weather-info"></div>
 <div id="weather-panel" class="hidden"></div>
   <header>
+    <div id="unlock-modal" class="hidden">
+  <div class="modal-bg"></div>
+  <div class="modal-content">
+    <label for="unlock-input" style="margin-bottom:8px;">Code eingeben:</label>
+    <input id="unlock-input" type="number" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" />
+    <div style="margin-top: 14px;">
+      <button id="unlock-confirm">OK</button>
+      <button id="unlock-cancel" style="margin-left:10px;">Abbrechen</button>
+    </div>
+  </div>
+</div>
     <img src="images/logo_transparent.png" alt="Logo" class="logo">
   </header>
 
@@ -104,25 +115,48 @@
 
   <!-- Scripts (Unlock, Uhr, Wetter, Drag&Drop) -->
   <script>
-    (function(){
-      const lockBtn = document.getElementById('lock-btn');
-      const SECRET_CODE = '540791';
-      lockBtn.addEventListener('click', () => {
-        const userCode = prompt('Bitte Code eingeben, um den Bereich freizuschalten:');
-        if (userCode === SECRET_CODE) {
-          document.querySelectorAll('.protected').forEach(el => el.classList.remove('hidden'));
-          lockBtn.textContent = '🔓';
-          document.documentElement.style.setProperty('--highlight-color', '#ff0000');
-          const logo = document.querySelector('.logo');
-          logo.src = 'images/logo_red.png';
-          logo.classList.remove('flash');
-          void logo.offsetWidth;
-          logo.classList.add('flash');
-        } else if (userCode !== null) {
-          alert('Falscher Code!');
-        }
-      });
-    })();
+   const lockBtn = document.getElementById('lock-btn');
+const SECRET_CODE = '540791';
+
+// MODAL-ELEMENTE
+const unlockModal = document.getElementById('unlock-modal');
+const unlockInput = document.getElementById('unlock-input');
+const unlockConfirm = document.getElementById('unlock-confirm');
+const unlockCancel = document.getElementById('unlock-cancel');
+
+lockBtn.addEventListener('click', () => {
+  unlockModal.classList.remove('hidden');
+  unlockInput.value = '';
+  unlockInput.placeholder = "";
+  unlockInput.classList.remove('error');
+  setTimeout(()=>unlockInput.focus(), 80); // Fokus für mobiles Keyboard
+});
+
+unlockConfirm.onclick = function() {
+  if (unlockInput.value === SECRET_CODE) {
+    document.querySelectorAll('.protected').forEach(el => el.classList.remove('hidden'));
+    lockBtn.textContent = '🔓';
+    document.documentElement.style.setProperty('--highlight-color', '#ff0000');
+    const logo = document.querySelector('.logo');
+    logo.src = 'images/logo_red.png';
+    logo.classList.remove('flash');
+    void logo.offsetWidth;
+    logo.classList.add('flash');
+    unlockModal.classList.add('hidden');
+  } else {
+    unlockInput.value = '';
+    unlockInput.placeholder = "Falscher Code!";
+    unlockInput.classList.add("error");
+    setTimeout(()=>unlockInput.classList.remove("error"),700);
+  }
+};
+unlockCancel.onclick = function() {
+  unlockModal.classList.add('hidden');
+};
+unlockInput.onkeydown = function(e) {
+  if (e.key === "Enter") unlockConfirm.click();
+};
+
   </script>
   <script>
     function updateClock() {
