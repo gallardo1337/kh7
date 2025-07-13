@@ -30,7 +30,8 @@
     <img src="images/logo_transparent.png" alt="Logo" class="logo">
   </header>
 
-  <form action="https://www.google.de/search" method="get" class="search-form">
+ <form action="https://www.google.de/search" method="get" class="search-form" accept-charset="UTF-8">
+  <input type="hidden" name="hl" value="de">
     <div class="search-wrapper">
       <img src="images/google_g_fullcolor.svg" alt="Google" class="google-icon">
       <input type="text" name="q" class="search-input" placeholder=" ">
@@ -73,10 +74,18 @@
       <img src="images/kicker_k_white.png" alt="Kicker">
       <span>Kicker</span>
     </a>
+    <a href="https://www.kicktipp.de" class="tile kicktipp-tile">
+  <img src="images/kt.png" alt="Kicktipp" style="width:38px; height:38px;">
+  <span>Kicktipp</span>
+</a>
     <a href="https://www.bild.de" class="tile bild-tile">
       <img src="images/bild_white.png" alt="Bild">
       <span>Bild</span>
     </a>
+<a href="https://www.transfermarkt.de" class="tile transfermarkt-tile">
+  <img src="images/tm.png" alt="Transfermarkt" style="width:38px; height:38px;">
+  <span>Transfermarkt</span>
+</a>
     <a href="https://amazon.de" class="tile amazon-tile">
       <img src="https://img.icons8.com/ios-filled/50/ffffff/amazon.png" alt="Amazon">
       <span>Amazon</span>
@@ -111,6 +120,11 @@
       <img src="images/xxx.png" alt="18+">
       <span>pornBB</span>
     </a>
+    <a href="https://www.f95zone.to" class="tile f95-tile protected hidden">
+  <img src="images/f95.png" alt="F95Zone" style="width:38px; height:38px;">
+  <span>F95Zone</span>
+</a>
+
   </section>
 
   <!-- Lock-Button & Uhr -->
@@ -305,6 +319,40 @@ function fetchForecast() {
       weatherPanel.innerHTML = "<div>Fehler beim Laden der Wetterdaten.</div>";
     });
 }
+</script>
+<div class="version-info" id="versionInfo">v1.0.1</div>
+<div id="changelogModal" class="changelog-modal hidden">
+  <div class="modal-bg"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>Changelog</span>
+      <button id="closeChangelog" class="close-btn">&times;</button>
+    </div>
+<div class="modal-body">
+  <div class="changelog-block">
+    <div class="changelog-version">v1.0.1</div>
+    <div class="changelog-details">
+      Kicktipp-Kachel hinzugefügt<br>
+      Versionsnummer jetzt klickbar mit Changelog-Popup<br>
+      Google-Suche auf Deutsch erzwungen
+    </div>
+  </div>
+  <div class="changelog-block">
+    <div class="changelog-version">v1.0.0</div>
+    <div class="changelog-details">
+      Initiale Version: Alle Tiles, Schutzbereiche und Wetter.
+    </div>
+  </div>
+</div>
+<script>
+const versionInfo = document.getElementById("versionInfo");
+const modal = document.getElementById("changelogModal");
+const closeBtn = document.getElementById("closeChangelog");
+const modalBg = modal.querySelector(".modal-bg");
+
+versionInfo.onclick = () => modal.classList.remove("hidden");
+closeBtn.onclick = () => modal.classList.add("hidden");
+modalBg.onclick = () => modal.classList.add("hidden");
 </script>
 </body>
 </html>
