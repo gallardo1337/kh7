@@ -189,6 +189,13 @@ function safeHttpUrl(value, allowRelative = false) {
     throw new Error("Die Adresse ist ungültig.");
   }
   if (!["http:", "https:"].includes(parsed.protocol)) throw new Error("Nur HTTP- oder HTTPS-Adressen sind erlaubt.");
+  if (allowRelative && parsed.hostname === "github.com") {
+    const blobPath = parsed.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/);
+    if (blobPath) {
+      const [, owner, repository, branch, filePath] = blobPath;
+      return `https://raw.githubusercontent.com/${owner}/${repository}/${branch}/${filePath}`;
+    }
+  }
   return parsed.href;
 }
 
