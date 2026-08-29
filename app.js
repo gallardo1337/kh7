@@ -466,7 +466,7 @@ async function handleAddTile(event) {
     position: maxPosition + 10,
     is_protected: true,
     icon_scale: 1,
-    icon_invert: iconUrl === "images/link.svg",
+    icon_invert: true,
   });
   elements.tileSubmit.disabled = false;
   elements.tileSubmit.textContent = "Kachel speichern";
