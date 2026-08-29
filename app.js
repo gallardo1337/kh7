@@ -369,6 +369,9 @@ async function handleLogin(event) {
     const { data, error } = await state.client.auth.signUp({
       email: elements.loginEmail.value.trim(),
       password: elements.loginPassword.value,
+      options: {
+        emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+      },
     });
     elements.loginSubmit.disabled = false;
     elements.loginSubmit.textContent = "Konto einrichten";

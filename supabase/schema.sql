@@ -29,6 +29,31 @@ grant select on table public.admin_users to authenticated;
 grant select on table public.tiles to anon, authenticated;
 grant insert, update, delete on table public.tiles to authenticated;
 
+create schema if not exists private;
+
+revoke all on schema private from public;
+grant usage on schema private to authenticated;
+
+create or replace function private.is_active_admin_session()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.admin_users as a
+    join auth.sessions as s
+      on s.user_id = a.user_id
+    where a.user_id = (select auth.uid())
+      and s.id = nullif((select auth.jwt() ->> 'session_id'), '')::uuid
+  );
+$$;
+
+revoke all on function private.is_active_admin_session() from public;
+grant execute on function private.is_active_admin_session() to authenticated;
+
 create policy "Admins can read their membership"
 on public.admin_users
 for select
@@ -47,55 +72,27 @@ for select
 to authenticated
 using (
   is_protected = false
-  or exists (
-      select 1
-      from public.admin_users
-      where admin_users.user_id = (select auth.uid())
-  )
+  or (select private.is_active_admin_session())
 );
 
 create policy "Admins can add tiles"
 on public.tiles
 for insert
 to authenticated
-with check (
-  exists (
-    select 1
-    from public.admin_users
-    where admin_users.user_id = (select auth.uid())
-  )
-);
+with check ((select private.is_active_admin_session()));
 
 create policy "Admins can update tiles"
 on public.tiles
 for update
 to authenticated
-using (
-  exists (
-    select 1
-    from public.admin_users
-    where admin_users.user_id = (select auth.uid())
-  )
-)
-with check (
-  exists (
-    select 1
-    from public.admin_users
-    where admin_users.user_id = (select auth.uid())
-  )
-);
+using ((select private.is_active_admin_session()))
+with check ((select private.is_active_admin_session()));
 
 create policy "Admins can delete tiles"
 on public.tiles
 for delete
 to authenticated
-using (
-  exists (
-    select 1
-    from public.admin_users
-    where admin_users.user_id = (select auth.uid())
-  )
-);
+using ((select private.is_active_admin_session()));
 
 insert into public.tiles (label, url, icon_url, icon_alt, hover_color, position, is_protected, icon_scale, icon_invert)
 values

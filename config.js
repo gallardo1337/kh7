@@ -3,5 +3,5 @@
 window.KH7_CONFIG = Object.freeze({
   supabaseUrl: "https://rmcwbhhwsxyoqohhgzhe.supabase.co",
   supabasePublishableKey: "sb_publishable_iTWeyhfns_LHBF7KGrQCRw_cTFi1Dth",
-  allowSignup: true,
+  allowSignup: false,
 });
