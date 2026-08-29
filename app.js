@@ -179,7 +179,7 @@ function applyAdminAppearance() {
   elements.lockButton.title = state.isAdmin ? "Abmelden" : "Anmelden";
   elements.lockButton.setAttribute("aria-label", state.isAdmin ? "Abmelden" : "Anmelden");
   document.documentElement.style.setProperty("--highlight-color", state.isAdmin ? "#ff0000" : "#00ff00");
-  elements.logo.src = state.isAdmin ? "images/logo_red.png" : "images/logo_transparent.png";
+  elements.logo.src = "images/logo_transparent.png";
   if (state.isAdmin) {
     elements.logo.classList.remove("flash");
     void elements.logo.offsetWidth;

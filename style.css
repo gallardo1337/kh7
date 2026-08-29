@@ -39,7 +39,7 @@ button { color: inherit; }
 @keyframes logo-flash {
   0% { filter: brightness(1.5) drop-shadow(0 0 24px #fff4); }
   40% { filter: brightness(2.2) drop-shadow(0 0 50px #fffa); }
-  65% { filter: brightness(2) drop-shadow(0 0 32px #f004); }
+  65% { filter: brightness(2) drop-shadow(0 0 32px #0f04); }
   100% { filter: brightness(1) drop-shadow(0 0 0 #0000); }
 }
 
