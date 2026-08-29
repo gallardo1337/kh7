@@ -1,21 +1,21 @@
 "use strict";
 
 const FALLBACK_TILES = [
-  { id: "chatgpt", label: "ChatGPT", url: "https://chat.openai.com", icon_url: "images/chatgpt.png", icon_alt: "ChatGPT", hover_color: "#10a37f", position: 10, is_protected: false, icon_scale: 1, icon_invert: true },
-  { id: "instagram", label: "Instagram", url: "https://instagram.com", icon_url: "https://cdn.simpleicons.org/instagram/FFFFFF", icon_alt: "Instagram", hover_color: "#df4996", position: 20, is_protected: false, icon_scale: 1, icon_invert: false },
-  { id: "twitter", label: "Twitter", url: "https://twitter.com", icon_url: "https://cdn.simpleicons.org/x/FFFFFF", icon_alt: "Twitter", hover_color: "#1da1f2", position: 30, is_protected: false, icon_scale: 1, icon_invert: false },
-  { id: "youtube", label: "YouTube", url: "https://youtube.com", icon_url: "https://cdn.simpleicons.org/youtube/FFFFFF", icon_alt: "YouTube", hover_color: "#ff0000", position: 40, is_protected: false, icon_scale: 1, icon_invert: false },
-  { id: "twitch", label: "Twitch", url: "https://www.twitch.tv", icon_url: "https://cdn.simpleicons.org/twitch/FFFFFF", icon_alt: "Twitch", hover_color: "#9146ff", position: 50, is_protected: false, icon_scale: 1, icon_invert: false },
-  { id: "cardmarket", label: "Cardmarket", url: "https://www.cardmarket.com", icon_url: "https://cdn.simpleicons.org/cardmarket/FFFFFF", icon_alt: "Cardmarket", hover_color: "#003366", position: 60, is_protected: false, icon_scale: 1, icon_invert: false },
-  { id: "kicker", label: "Kicker", url: "https://www.kicker.de", icon_url: "images/kicker_k_white.png", icon_alt: "Kicker", hover_color: "#d60018", position: 70, is_protected: false, icon_scale: 1.3, icon_invert: false },
-  { id: "kicktipp", label: "Kicktipp", url: "https://www.kicktipp.de", icon_url: "images/kt.png", icon_alt: "Kicktipp", hover_color: "#e50019", position: 80, is_protected: false, icon_scale: 0.95, icon_invert: false },
-  { id: "bild", label: "Bild", url: "https://www.bild.de", icon_url: "images/bild_white.png", icon_alt: "Bild", hover_color: "#ed1c24", position: 90, is_protected: false, icon_scale: 1, icon_invert: false },
-  { id: "transfermarkt", label: "Transfermarkt", url: "https://www.transfermarkt.de", icon_url: "images/tm.png", icon_alt: "Transfermarkt", hover_color: "#05396d", position: 100, is_protected: false, icon_scale: 0.95, icon_invert: false },
-  { id: "amazon", label: "Amazon", url: "https://amazon.de", icon_url: "https://img.icons8.com/ios-filled/50/ffffff/amazon.png", icon_alt: "Amazon", hover_color: "#ff9900", position: 110, is_protected: false, icon_scale: 1, icon_invert: false },
-  { id: "facebook", label: "Facebook", url: "https://facebook.com", icon_url: "https://cdn.simpleicons.org/facebook/FFFFFF", icon_alt: "Facebook", hover_color: "#1877f3", position: 120, is_protected: false, icon_scale: 1, icon_invert: false },
-  { id: "mydealz", label: "mydealz", url: "https://www.mydealz.de", icon_url: "images/mydealz_two_tone.png", icon_alt: "Mydealz", hover_color: "#4dc431", position: 130, is_protected: false, icon_scale: 1.2, icon_invert: false },
-  { id: "nas", label: "NAS", url: "http://QuickConnect.to/ikanoNAS", icon_url: "https://img.icons8.com/ios-filled/50/ffffff/server.png", icon_alt: "NAS", hover_color: "#0051ff", position: 140, is_protected: false, icon_scale: 1, icon_invert: false },
-  { id: "reddit", label: "Reddit", url: "https://www.reddit.com", icon_url: "https://cdn.simpleicons.org/reddit/FFFFFF", icon_alt: "Reddit", hover_color: "#ff4500", position: 150, is_protected: false, icon_scale: 1, icon_invert: false },
+  { id: "chatgpt", label: "ChatGPT", url: "https://chat.openai.com", icon_url: "images/chatgpt.png", icon_alt: "ChatGPT", hover_color: "#10a37f", category: "tools", position: 10, is_protected: false, icon_scale: 1, icon_invert: true },
+  { id: "instagram", label: "Instagram", url: "https://instagram.com", icon_url: "https://cdn.simpleicons.org/instagram/FFFFFF", icon_alt: "Instagram", hover_color: "#df4996", category: "social", position: 20, is_protected: false, icon_scale: 1, icon_invert: false },
+  { id: "twitter", label: "Twitter", url: "https://twitter.com", icon_url: "https://cdn.simpleicons.org/x/FFFFFF", icon_alt: "Twitter", hover_color: "#1da1f2", category: "social", position: 30, is_protected: false, icon_scale: 1, icon_invert: false },
+  { id: "youtube", label: "YouTube", url: "https://youtube.com", icon_url: "https://cdn.simpleicons.org/youtube/FFFFFF", icon_alt: "YouTube", hover_color: "#ff0000", category: "medien", position: 40, is_protected: false, icon_scale: 1, icon_invert: false },
+  { id: "twitch", label: "Twitch", url: "https://www.twitch.tv", icon_url: "https://cdn.simpleicons.org/twitch/FFFFFF", icon_alt: "Twitch", hover_color: "#9146ff", category: "medien", position: 50, is_protected: false, icon_scale: 1, icon_invert: false },
+  { id: "cardmarket", label: "Cardmarket", url: "https://www.cardmarket.com", icon_url: "https://cdn.simpleicons.org/cardmarket/FFFFFF", icon_alt: "Cardmarket", hover_color: "#003366", category: "tools", position: 60, is_protected: false, icon_scale: 1, icon_invert: false },
+  { id: "kicker", label: "Kicker", url: "https://www.kicker.de", icon_url: "images/kicker_k_white.png", icon_alt: "Kicker", hover_color: "#d60018", category: "medien", position: 70, is_protected: false, icon_scale: 1.3, icon_invert: false },
+  { id: "kicktipp", label: "Kicktipp", url: "https://www.kicktipp.de", icon_url: "images/kt.png", icon_alt: "Kicktipp", hover_color: "#e50019", category: "medien", position: 80, is_protected: false, icon_scale: 0.95, icon_invert: false },
+  { id: "bild", label: "Bild", url: "https://www.bild.de", icon_url: "images/bild_white.png", icon_alt: "Bild", hover_color: "#ed1c24", category: "medien", position: 90, is_protected: false, icon_scale: 1, icon_invert: false },
+  { id: "transfermarkt", label: "Transfermarkt", url: "https://www.transfermarkt.de", icon_url: "images/tm.png", icon_alt: "Transfermarkt", hover_color: "#05396d", category: "medien", position: 100, is_protected: false, icon_scale: 0.95, icon_invert: false },
+  { id: "amazon", label: "Amazon", url: "https://amazon.de", icon_url: "https://img.icons8.com/ios-filled/50/ffffff/amazon.png", icon_alt: "Amazon", hover_color: "#ff9900", category: "tools", position: 110, is_protected: false, icon_scale: 1, icon_invert: false },
+  { id: "facebook", label: "Facebook", url: "https://facebook.com", icon_url: "https://cdn.simpleicons.org/facebook/FFFFFF", icon_alt: "Facebook", hover_color: "#1877f3", category: "social", position: 120, is_protected: false, icon_scale: 1, icon_invert: false },
+  { id: "mydealz", label: "mydealz", url: "https://www.mydealz.de", icon_url: "images/mydealz_two_tone.png", icon_alt: "Mydealz", hover_color: "#4dc431", category: "tools", position: 130, is_protected: false, icon_scale: 1.2, icon_invert: false },
+  { id: "nas", label: "NAS", url: "http://QuickConnect.to/ikanoNAS", icon_url: "https://img.icons8.com/ios-filled/50/ffffff/server.png", icon_alt: "NAS", hover_color: "#0051ff", category: "privat", position: 140, is_protected: false, icon_scale: 1, icon_invert: false },
+  { id: "reddit", label: "Reddit", url: "https://www.reddit.com", icon_url: "https://cdn.simpleicons.org/reddit/FFFFFF", icon_alt: "Reddit", hover_color: "#ff4500", category: "social", position: 150, is_protected: false, icon_scale: 1, icon_invert: false },
 ];
 
 const state = {
@@ -30,6 +30,9 @@ const state = {
   suggestionRequest: 0,
   sessionToken: undefined,
   authMode: "login",
+  activeCategory: "all",
+  editingTileId: null,
+  categoryTouched: false,
 };
 
 const elements = {
@@ -37,6 +40,8 @@ const elements = {
   logo: document.getElementById("logo"),
   tiles: document.getElementById("tiles"),
   tilesStatus: document.getElementById("tiles-status"),
+  categories: document.getElementById("categories"),
+  categoryButtons: document.querySelectorAll(".category-tab"),
   lockButton: document.getElementById("lock-btn"),
   addTileButton: document.getElementById("add-tile-btn"),
   clock: document.getElementById("clock"),
@@ -51,10 +56,12 @@ const elements = {
   tileForm: document.getElementById("tile-form"),
   tileFormMessage: document.getElementById("tile-form-message"),
   tileSubmit: document.getElementById("tile-submit"),
+  tileModalTitle: document.getElementById("tile-modal-title"),
   tileLabel: document.getElementById("tile-label"),
   tileUrl: document.getElementById("tile-url"),
   tileIconUrl: document.getElementById("tile-icon-url"),
   tileHoverColor: document.getElementById("tile-hover-color"),
+  tileCategory: document.getElementById("tile-category"),
   changelogModal: document.getElementById("changelog-modal"),
   versionInfo: document.getElementById("version-info"),
   weatherInfo: document.getElementById("weather-info"),
@@ -166,6 +173,7 @@ function applyAdminAppearance() {
   elements.body.classList.toggle("admin-mode", state.isAdmin);
   elements.tiles.classList.toggle("hidden", !state.isAdmin);
   elements.tilesStatus.classList.toggle("hidden", !state.isAdmin);
+  elements.categories.classList.toggle("hidden", !state.isAdmin);
   elements.addTileButton.classList.toggle("hidden", !state.isAdmin);
   elements.lockButton.textContent = state.isAdmin ? "🔓" : "🔒";
   elements.lockButton.title = state.isAdmin ? "Abmelden" : "Anmelden";
@@ -199,9 +207,38 @@ function safeHttpUrl(value, allowRelative = false) {
   return parsed.href;
 }
 
+function inferCategory(label, urlValue) {
+  const value = `${label || ""} ${urlValue || ""}`.toLowerCase();
+  let hostname = "";
+  try {
+    hostname = new URL(urlValue).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    // Während des Tippens ist die Adresse oft noch unvollständig.
+  }
+  const privateTerms = ["nas", "quickconnect", "my1337", "onlyfans", "planetsuzy", "pornbb", "f95zone"];
+  const socialTerms = ["instagram", "twitter", "facebook", "reddit", "tiktok", "linkedin", "mastodon"];
+  const mediaTerms = ["youtube", "youtu.be", "twitch", "kicker", "kicktipp", "bild.de", "transfermarkt", "spotify", "netflix", "primevideo", "disneyplus"];
+  if (privateTerms.some((term) => value.includes(term))) return "privat";
+  if (hostname === "x.com" || hostname.endsWith(".x.com")) return "social";
+  if (socialTerms.some((term) => value.includes(term))) return "social";
+  if (mediaTerms.some((term) => value.includes(term))) return "medien";
+  return "tools";
+}
+
+function setActiveCategory(category) {
+  state.activeCategory = category;
+  elements.categoryButtons.forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.category === category));
+  });
+  renderTiles();
+}
+
 function renderTiles() {
   const fragment = document.createDocumentFragment();
-  state.tiles.forEach((tile) => {
+  const visibleTiles = state.activeCategory === "all"
+    ? state.tiles
+    : state.tiles.filter((tile) => tile.category === state.activeCategory);
+  visibleTiles.forEach((tile) => {
     const shell = document.createElement("div");
     shell.className = "tile-shell";
     shell.dataset.id = tile.id;
@@ -211,7 +248,7 @@ function renderTiles() {
     link.href = tile.url;
     link.style.setProperty("--tile-hover", tile.hover_color || "#444444");
     link.style.setProperty("--icon-scale", String(tile.icon_scale || 1));
-    link.draggable = state.isAdmin;
+    link.draggable = state.isAdmin && state.activeCategory === "all";
 
     const image = document.createElement("img");
     image.src = tile.icon_url || "images/link.svg";
@@ -232,6 +269,15 @@ function renderTiles() {
     shell.appendChild(link);
 
     if (state.isAdmin) {
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.className = "tile-edit";
+      editButton.textContent = "✎";
+      editButton.title = `${tile.label} bearbeiten`;
+      editButton.setAttribute("aria-label", `${tile.label} bearbeiten`);
+      editButton.addEventListener("click", () => openEditTileModal(tile));
+      shell.appendChild(editButton);
+
       const deleteButton = document.createElement("button");
       deleteButton.type = "button";
       deleteButton.className = "tile-delete";
@@ -240,12 +286,16 @@ function renderTiles() {
       deleteButton.setAttribute("aria-label", `${tile.label} löschen`);
       deleteButton.addEventListener("click", () => deleteTile(tile));
       shell.appendChild(deleteButton);
-      attachDragEvents(shell, link);
+      if (state.activeCategory === "all") attachDragEvents(shell, link);
     }
     fragment.appendChild(shell);
   });
   elements.tiles.replaceChildren(fragment);
-  elements.tilesStatus.textContent = state.isAdmin && !state.tiles.length ? "Noch keine Kacheln vorhanden." : "";
+  elements.tilesStatus.textContent = state.isAdmin && !state.tiles.length
+    ? "Noch keine Kacheln vorhanden."
+    : state.isAdmin && !visibleTiles.length
+      ? "Keine Kacheln in dieser Kategorie."
+      : "";
 }
 
 function attachDragEvents(shell, dragHandle) {
@@ -309,7 +359,7 @@ async function loadTiles() {
   }
   const { data, error } = await state.client
     .from("tiles")
-    .select("id,label,url,icon_url,icon_alt,hover_color,position,is_protected,icon_scale,icon_invert")
+    .select("id,label,url,icon_url,icon_alt,hover_color,category,position,is_protected,icon_scale,icon_invert")
     .order("position", { ascending: true });
   if (error) {
     state.tiles = FALLBACK_TILES.map((tile) => ({ ...tile }));
@@ -441,7 +491,38 @@ async function handleLockButton() {
   showToast("Abgemeldet.");
 }
 
-async function handleAddTile(event) {
+function updateSuggestedCategory() {
+  if (state.editingTileId || state.categoryTouched) return;
+  elements.tileCategory.value = inferCategory(elements.tileLabel.value, elements.tileUrl.value);
+}
+
+function openAddTileModal() {
+  state.editingTileId = null;
+  state.categoryTouched = false;
+  elements.tileForm.reset();
+  elements.tileHoverColor.value = "#444444";
+  elements.tileCategory.value = "tools";
+  elements.tileFormMessage.textContent = "";
+  elements.tileModalTitle.textContent = "Kachel hinzufügen";
+  elements.tileSubmit.textContent = "Kachel speichern";
+  openModal(elements.tileModal, elements.tileLabel);
+}
+
+function openEditTileModal(tile) {
+  state.editingTileId = tile.id;
+  state.categoryTouched = true;
+  elements.tileLabel.value = tile.label;
+  elements.tileUrl.value = tile.url;
+  elements.tileIconUrl.value = tile.icon_url || "";
+  elements.tileHoverColor.value = tile.hover_color || "#444444";
+  elements.tileCategory.value = tile.category || inferCategory(tile.label, tile.url);
+  elements.tileFormMessage.textContent = "";
+  elements.tileModalTitle.textContent = "Kachel bearbeiten";
+  elements.tileSubmit.textContent = "Änderungen speichern";
+  openModal(elements.tileModal, elements.tileLabel);
+}
+
+async function handleTileSubmit(event) {
   event.preventDefault();
   if (!state.client || !state.isAdmin) return;
   elements.tileFormMessage.textContent = "";
@@ -456,29 +537,38 @@ async function handleAddTile(event) {
   }
   elements.tileSubmit.disabled = true;
   elements.tileSubmit.textContent = "Wird gespeichert …";
-  const maxPosition = state.tiles.reduce((max, tile) => Math.max(max, Number(tile.position) || 0), 0);
-  const { error } = await state.client.from("tiles").insert({
+  const existingTile = state.tiles.find((tile) => tile.id === state.editingTileId);
+  const payload = {
     label: elements.tileLabel.value.trim(),
     url,
     icon_url: iconUrl,
     icon_alt: elements.tileLabel.value.trim(),
     hover_color: elements.tileHoverColor.value,
-    position: maxPosition + 10,
+    category: elements.tileCategory.value,
     is_protected: true,
-    icon_scale: 1,
+    icon_scale: existingTile?.icon_scale || 1,
     icon_invert: true,
-  });
+  };
+  let result;
+  if (state.editingTileId) {
+    result = await state.client.from("tiles").update(payload).eq("id", state.editingTileId);
+  } else {
+    const maxPosition = state.tiles.reduce((max, tile) => Math.max(max, Number(tile.position) || 0), 0);
+    result = await state.client.from("tiles").insert({ ...payload, position: maxPosition + 10 });
+  }
   elements.tileSubmit.disabled = false;
-  elements.tileSubmit.textContent = "Kachel speichern";
-  if (error) {
+  elements.tileSubmit.textContent = state.editingTileId ? "Änderungen speichern" : "Kachel speichern";
+  if (result.error) {
     elements.tileFormMessage.textContent = "Die Kachel konnte nicht gespeichert werden.";
     return;
   }
+  const wasEditing = Boolean(state.editingTileId);
+  state.editingTileId = null;
   elements.tileForm.reset();
   elements.tileHoverColor.value = "#444444";
   closeModal(elements.tileModal);
   await loadTiles();
-  showToast("Kachel hinzugefügt.");
+  showToast(wasEditing ? "Kachel aktualisiert." : "Kachel hinzugefügt.");
 }
 
 async function deleteTile(tile) {
@@ -609,12 +699,15 @@ function bindEvents() {
   elements.lockButton.addEventListener("click", handleLockButton);
   elements.authModeToggle.classList.toggle("hidden", !window.KH7_CONFIG?.allowSignup);
   elements.authModeToggle.addEventListener("click", () => setAuthMode(state.authMode === "login" ? "signup" : "login"));
-  elements.addTileButton.addEventListener("click", () => {
-    elements.tileFormMessage.textContent = "";
-    openModal(elements.tileModal, elements.tileLabel);
-  });
+  elements.addTileButton.addEventListener("click", openAddTileModal);
   elements.loginForm.addEventListener("submit", handleLogin);
-  elements.tileForm.addEventListener("submit", handleAddTile);
+  elements.tileForm.addEventListener("submit", handleTileSubmit);
+  elements.tileLabel.addEventListener("input", updateSuggestedCategory);
+  elements.tileUrl.addEventListener("input", updateSuggestedCategory);
+  elements.tileCategory.addEventListener("change", () => { state.categoryTouched = true; });
+  elements.categoryButtons.forEach((button) => {
+    button.addEventListener("click", () => setActiveCategory(button.dataset.category));
+  });
   elements.versionInfo.addEventListener("click", () => openModal(elements.changelogModal));
   elements.searchInput.addEventListener("input", handleSearchInput);
   elements.searchInput.addEventListener("keydown", handleSearchKeys);

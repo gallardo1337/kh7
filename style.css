@@ -20,7 +20,7 @@ body {
   text-align: center;
 }
 
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button { color: inherit; }
 
 .logo {
@@ -152,9 +152,60 @@ button { color: inherit; }
   color: #fff;
 }
 
+.categories {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 26px;
+  margin: 28px auto 0;
+}
+
+.category-tab {
+  --category-color: #00ff00;
+  position: relative;
+  padding: 7px 2px 10px;
+  border: 0;
+  background: transparent;
+  color: #8e8e8e;
+  cursor: pointer;
+  transition: color 0.18s;
+}
+
+.category-tab::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--category-color);
+  box-shadow: 0 0 9px var(--category-color);
+  opacity: 0;
+  transform: scaleX(0.45);
+  transition: opacity 0.18s, transform 0.18s;
+}
+
+.category-tab[data-category="social"] { --category-color: #ff354d; }
+.category-tab[data-category="medien"] { --category-color: #b967ff; }
+.category-tab[data-category="tools"] { --category-color: #329dff; }
+.category-tab[data-category="privat"] { --category-color: #ff4fb8; }
+
+.category-tab:hover,
+.category-tab:focus-visible,
+.category-tab[aria-pressed="true"] {
+  color: #fff;
+  outline: none;
+}
+
+.category-tab[aria-pressed="true"]::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
 .tiles-status {
   min-height: 20px;
-  margin: 88px auto -72px;
+  margin: 26px auto -18px;
   color: #888;
   font-size: 0.9rem;
 }
@@ -162,7 +213,7 @@ button { color: inherit; }
 .tiles-status:empty { visibility: hidden; }
 
 .tiles {
-  margin: var(--tiles-margin-top) auto 0;
+  margin: 34px auto 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--tiles-gap);
@@ -221,8 +272,8 @@ button { color: inherit; }
   outline: none;
 }
 
-body.admin-mode .tile { cursor: grab; }
-body.admin-mode .tile:active { cursor: grabbing; }
+body.admin-mode .tile[draggable="true"] { cursor: grab; }
+body.admin-mode .tile[draggable="true"]:active { cursor: grabbing; }
 .tile-shell.dragging { opacity: 0.48; }
 
 .tile-shell.dragging .tile {
@@ -235,10 +286,10 @@ body.admin-mode .tile:active { cursor: grabbing; }
   box-shadow: 0 0 10px color-mix(in srgb, var(--highlight-color) 60%, transparent);
 }
 
-.tile-delete {
+.tile-delete,
+.tile-edit {
   position: absolute;
   top: -8px;
-  right: -8px;
   z-index: 5;
   width: 26px;
   height: 26px;
@@ -254,14 +305,31 @@ body.admin-mode .tile:active { cursor: grabbing; }
   transition: opacity 0.15s, transform 0.15s, background 0.15s;
 }
 
+.tile-delete { right: -8px; }
+
+.tile-edit {
+  left: -8px;
+  border-color: #7fbfff;
+  background: #10233b;
+  color: #7fbfff;
+  font-size: 0.95rem;
+}
+
 .tile-shell:hover .tile-delete,
-.tile-delete:focus-visible {
+.tile-shell:hover .tile-edit,
+.tile-delete:focus-visible,
+.tile-edit:focus-visible {
   opacity: 1;
   transform: scale(1);
 }
 
 .tile-delete:hover {
   background: #9e1b1b;
+  color: #fff;
+}
+
+.tile-edit:hover {
+  background: #1763a8;
   color: #fff;
 }
 
@@ -468,7 +536,8 @@ body.admin-mode .tile:active { cursor: grabbing; }
   font-size: 0.94rem;
 }
 
-.stacked-form input:not([type="checkbox"]):not([type="color"]) {
+.stacked-form input:not([type="checkbox"]):not([type="color"]),
+.stacked-form select {
   width: 100%;
   border: 1px solid #555;
   border-radius: 9px;
@@ -478,7 +547,8 @@ body.admin-mode .tile:active { cursor: grabbing; }
   outline: none;
 }
 
-.stacked-form input:not([type="checkbox"]):focus {
+.stacked-form input:not([type="checkbox"]):focus,
+.stacked-form select:focus {
   border-color: var(--highlight-color);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--highlight-color) 18%, transparent);
 }
@@ -607,19 +677,21 @@ body.admin-mode .tile:active { cursor: grabbing; }
   .logo { width: 240px; }
   .search-wrapper { width: 90%; max-width: none; }
   .search-suggestion { padding-left: 42px; padding-right: 42px; }
-  .tiles-status { margin-top: 52px; margin-bottom: -44px; }
+  .categories { width: 92%; gap: 14px; margin-top: 24px; }
+  .tiles-status { margin-top: 22px; margin-bottom: -14px; }
 
   .tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 90%;
     max-width: none;
     gap: 12px;
-    margin-top: 60px;
+    margin-top: 30px;
   }
 
   .tile { min-height: 60px; padding: 10px; gap: 6px; }
   .tile span { margin-left: 4px; font-size: 0.88rem; }
-  .tile-delete { opacity: 1; transform: scale(0.92); }
+  .tile-delete,
+  .tile-edit { opacity: 1; transform: scale(0.92); }
   .weather-info { top: 14px; left: 12px; }
   .weather-panel { left: 12px; }
   #lock-container { top: 12px; right: 10px; gap: 5px; }
