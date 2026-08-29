@@ -1,6 +1,6 @@
 # KH7 Dashboard
 
-Persönliche Startseite mit Google-Suche, Wetter, zentral gespeicherten Kacheln und einem geschützten Adminbereich.
+Persönliche Startseite mit Google-Suche, Wetter und zentral gespeicherten Kacheln in einem geschützten Adminbereich.
 
 ## Supabase-Einrichtung
 
@@ -17,4 +17,4 @@ Persönliche Startseite mit Google-Suche, Wetter, zentral gespeicherten Kacheln 
 
 6. Danach `allowSignup` in `config.js` auf `false` setzen. Projekt-URL und Publishable Key dürfen dort stehen; niemals einen Secret- oder `service_role`-Key hinterlegen.
 
-Die Datenbankrichtlinien erlauben unangemeldeten Besuchern ausschließlich öffentliche Kacheln. Nur das explizit eingetragene Admin-Konto darf geschützte Kacheln sehen, Kacheln anlegen oder löschen und die Reihenfolge verändern.
+Die Datenbankrichtlinien geben unangemeldeten Besuchern keine Kacheln aus. Nur das explizit eingetragene Admin-Konto darf Kacheln sehen, anlegen, löschen oder ihre Reihenfolge verändern.

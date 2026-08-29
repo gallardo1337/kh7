@@ -55,7 +55,6 @@ const elements = {
   tileUrl: document.getElementById("tile-url"),
   tileIconUrl: document.getElementById("tile-icon-url"),
   tileHoverColor: document.getElementById("tile-hover-color"),
-  tileProtected: document.getElementById("tile-protected"),
   changelogModal: document.getElementById("changelog-modal"),
   versionInfo: document.getElementById("version-info"),
   weatherInfo: document.getElementById("weather-info"),
@@ -165,6 +164,8 @@ async function toggleWeather() {
 
 function applyAdminAppearance() {
   elements.body.classList.toggle("admin-mode", state.isAdmin);
+  elements.tiles.classList.toggle("hidden", !state.isAdmin);
+  elements.tilesStatus.classList.toggle("hidden", !state.isAdmin);
   elements.addTileButton.classList.toggle("hidden", !state.isAdmin);
   elements.lockButton.textContent = state.isAdmin ? "🔓" : "🔒";
   elements.lockButton.title = state.isAdmin ? "Abmelden" : "Anmelden";
@@ -237,7 +238,7 @@ function renderTiles() {
     fragment.appendChild(shell);
   });
   elements.tiles.replaceChildren(fragment);
-  elements.tilesStatus.textContent = state.tiles.length ? "" : "Noch keine Kacheln vorhanden.";
+  elements.tilesStatus.textContent = state.isAdmin && !state.tiles.length ? "Noch keine Kacheln vorhanden." : "";
 }
 
 function attachDragEvents(shell, dragHandle) {
@@ -288,6 +289,11 @@ async function persistTileOrder() {
 }
 
 async function loadTiles() {
+  if (!state.isAdmin) {
+    state.tiles = [];
+    renderTiles();
+    return;
+  }
   elements.tilesStatus.textContent = "Kacheln werden geladen …";
   if (!state.client) {
     state.tiles = FALLBACK_TILES.map((tile) => ({ ...tile }));
@@ -451,7 +457,7 @@ async function handleAddTile(event) {
     icon_alt: elements.tileLabel.value.trim(),
     hover_color: elements.tileHoverColor.value,
     position: maxPosition + 10,
-    is_protected: elements.tileProtected.checked,
+    is_protected: true,
     icon_scale: 1,
     icon_invert: iconUrl === "images/link.svg",
   });
@@ -463,7 +469,6 @@ async function handleAddTile(event) {
   }
   elements.tileForm.reset();
   elements.tileHoverColor.value = "#444444";
-  elements.tileProtected.checked = true;
   closeModal(elements.tileModal);
   await loadTiles();
   showToast("Kachel hinzugefügt.");
