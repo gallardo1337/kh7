@@ -180,7 +180,6 @@
     render();
     if (userId) loadCloudNotes();
     if (userId && settings.enabled.includes("crypto") && settings.holdings.length) refreshCrypto();
-    if (userId && settings.enabled.includes("cs2") && settings.profiles.length) refreshInventories();
   }
   function render() {
     grid.replaceChildren();
@@ -356,6 +355,7 @@
       remove.setAttribute("aria-label", `${holding.symbol} entfernen`);
       row.append(description, value, remove);
       card.append(row);
+
     }
     if (!settings.holdings.length) message(card, "Trage einen Coin und deine Menge ein, um dein Portfolio zu berechnen.");
     const form = el("form", undefined, "stacked-form");
@@ -495,6 +495,22 @@
       remove.setAttribute("aria-label", `${profile.label} entfernen`);
       row.append(description, value, remove);
       card.append(row);
+      const importLabel = el("label", "Steam-Inventar importieren", "module-muted inventory-import");
+      const importFile = el("input"); importFile.type = "file"; importFile.accept = ".json,application/json";
+      importFile.setAttribute("aria-label", `Inventar-JSON für ${profile.label} importieren`);
+      importFile.addEventListener("change", async () => {
+        const file = importFile.files?.[0]; if (!file) return;
+        if (file.size > 2000000) { showToast("Inventardatei darf maximal 2 MB groß sein.", "error"); return; }
+        try { const inventory = JSON.parse(await file.text()); await refreshInventories({ profile: profile.profile, inventory }); }
+        catch { showToast("Bitte eine gültige Steam-Inventardatei im JSON-Format wählen.", "error"); }
+      });
+      importLabel.append(importFile); card.append(importLabel);
+      const steamId = steamAnalystURL(profile.profile)?.split("/").pop();
+      if (steamId) {
+        const exportLink = el("a", "Inventar im eigenen Browser öffnen und als JSON speichern");
+        exportLink.href = `https://steamcommunity.com/inventory/${steamId}/730/2?l=english&count=5000`;
+        exportLink.target = "_blank"; exportLink.rel = "noopener noreferrer"; card.append(exportLink);
+      }
     }
     const form = el("form", undefined, "stacked-form");
     const label = field(form, "Profilname", input("z. B. Hauptaccount", 40));
@@ -518,7 +534,7 @@
     progress.dataset.inventoryStatus = ""; progress.setAttribute("aria-live", "polite");
     message(card, "Schätzung der sichtbaren Inventargegenstände ohne Gebühren und individuelle Sticker-Aufpreise. Items ohne Preis werden nicht mitgerechnet.");
   }
-  async function refreshInventories() {
+  async function refreshInventories(imported = {}) {
     if (!userId || inventoryBusy || !settings.profiles.length) return;
     const current = generation; inventoryBusy = true; render();
     const errors = [];
@@ -528,17 +544,18 @@
       if (current !== generation) return;
       if (!session.data?.session?.access_token) throw new Error("Bitte erneut anmelden.");
       for (const profile of settings.profiles.slice()) {
+        if (imported.profile && imported.profile !== profile.profile) continue;
         if (current !== generation) return;
         try {
           const result = await json(`${window.KH7_CONFIG.supabaseUrl}/functions/v1/cs2-inventory`, {
             method: "POST", headers: { "Content-Type": "application/json", apikey: window.KH7_CONFIG.supabasePublishableKey, Authorization: `Bearer ${session.data.session.access_token}` },
-            body: JSON.stringify({ profile: profile.profile, currency: settings.currency, valuation: settings.valuation }),
+            body: JSON.stringify({ profile: profile.profile, currency: settings.currency, valuation: settings.valuation, ...(imported.inventory ? { inventory: imported.inventory } : {}) }),
           });
           if (current !== generation) return;
           if (!Number.isFinite(result.total) || result.total < 0 || !Number.isFinite(result.itemCount) || !Number.isFinite(result.unpricedCount) || !Number.isFinite(Date.parse(result.updatedAt))) throw new Error("Ungültige Inventarantwort.");
           inventories.set(profile.profile, result); success++;
           if (result.warning) errors.push(`${profile.label}: ${result.warning}`);
-        } catch (error) { if (current !== generation) return; inventories.delete(profile.profile); errors.push(`${profile.label}: ${error.message}`); }
+        } catch (error) { if (current !== generation) return; errors.push(`${profile.label}: ${error.message}${inventories.has(profile.profile) ? " Letzter Wert bleibt sichtbar." : ""}`); }
       }
     } catch (error) { errors.push(error.message); }
     finally {
@@ -626,5 +643,5 @@
   });
   if (typeof state !== "undefined") setSession({ isAdmin: state.isAdmin, userId: state.user?.id });
   window.setInterval(() => { if (!document.hidden && userId) refreshCrypto(); }, 300000);
-  window.setInterval(() => { if (!document.hidden && userId && settings.enabled.includes("cs2")) refreshInventories(); }, 900000);
+  window.setInterval(() => { if (!document.hidden && userId && settings.enabled.includes("cs2") && inventories.size) refreshInventories(); }, 900000);
 })();

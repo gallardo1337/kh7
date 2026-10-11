@@ -53,6 +53,10 @@ function setup(options = {}) {
   const limited = await (await providerLimit.call()).json(); assert.equal(providerLimit.quotes(), 1); assert.equal(limited.unpricedCount, 24); assert.equal(limited.total, 10);
   assert.equal((await setup({ throttle: true }).call()).status, 429);
   assert.equal((await setup({ pagination: true }).call()).status, 502);
+  const imported = setup({ steamStatus: 429 });
+  const importValue = await (await imported.call({ profile: id, currency: 'USD', inventory: { success: 1, assets: [{ assetid: '1', classid: '1', instanceid: '0', amount: '3' }], descriptions: [{ classid: '1', instanceid: '0', market_hash_name: 'Item 0' }] } })).json();
+  assert.equal(importValue.total, 30); assert.equal(importValue.inventorySource, 'import');
+  assert.equal((await imported.call({ profile: id, inventory: { success: 1, assets: [], descriptions: [], more_items: true } })).status, 400);
   assert.equal((await setup({ booleanSuccess: true }).call()).status, 200);
   const rateLimited = await setup({ steamStatus: 429 }).call(); assert.equal(rateLimited.status, 429); assert.match((await rateLimited.json()).error, /HTTP 429/);
   const blocked = await setup({ steamStatus: 403 }).call(); assert.match((await blocked.json()).error, /nicht bestätigt/);

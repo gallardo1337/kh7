@@ -50,3 +50,5 @@ Quellen: [SteamAnalyst API](https://api.steamanalyst.com/), [Supabase Secrets](h
 ## Hostinger-Veröffentlichung
 
 Die statischen Webdateien werden direkt in `public_html` entpackt. Die enthaltene `.htaccess` setzt `index.html` als Startseite. Vorhandene Verzeichnisse wie `public_html/uploads` bleiben dabei unverändert und dürfen beim Hochladen nicht gelöscht werden.
+
+Bei einer Steam-Sperre (HTTP 429) kann in der CS2-Verwaltung je Profil das Inventar im eigenen Browser geöffnet, als JSON gespeichert und über „Steam-Inventar importieren“ bewertet werden. Der Import benötigt ein vollständiges Inventar ohne more_items; maximal 2 MB und 5000 Assets. Der Wert ist ausdrücklich der Stand der Datei, kein Live-Wert. Das automatische erste Laden beim Login ist deaktiviert. Periodische Aktualisierung beginnt erst nach einer erfolgreichen Bewertung; fehlgeschlagene Abrufe behalten bestehende Werte bei.
