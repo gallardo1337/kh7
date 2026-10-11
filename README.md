@@ -27,28 +27,15 @@ Die Haftnotizen stehen links unter dem Wetter oder rechts neben den Kacheln. Am 
 
 Rechts neben dem Portfolio steht für jedes gespeicherte Profil eine eigene CS2-Anzeige mit Profilname und Wert. Die Anzeigen stehen nebeneinander und brechen bei wenig Platz um. Ein Klick auf den Wert öffnet dessen SteamAnalyst-Inventar in einem neuen Tab. Jede Anzeige verlinkt direkt das zugehörige SteamAnalyst-Inventar. Das Zahnrad öffnet die Profilverwaltung und Bewertung. Der Direktlink benötigt eine SteamID64 oder einen numerischen /profiles/-Link; bei benutzerdefinierten /id/-Links wird zunächst die Verwaltung geöffnet. Vor dem ersten erfolgreichen Abruf zeigt KH7 „—“. SteamAnalyst kann trotzdem direkt geöffnet werden.
 
-CS2 erlaubt bis zu zehn Profile (SteamID64, SteamAnalyst-Inventarlink oder Steam-Profillink). Die aktive Bewertung über Supabase benötigt eine numerische SteamID64. Inventarwerte werden auf Knopfdruck abgerufen. KH7 liest das öffentliche CS2-Inventar von Steam und summiert die SteamAnalyst-Fair-Prices in USD. EUR wird mit dem EZB-Referenzkurs über Frankfurter umgerechnet. Das ist eine Schätzung aus Itempreisen, kein aus der SteamAnalyst-Webseite ausgelesener Gesamtwert; individuelle Float-, Pattern- und Sticker-Aufpreise werden nicht berechnet.
+CS2 übernimmt ausschließlich den SA Price-Gesamtwert von der verlinkten SteamAnalyst-Inventarseite. Der Server liest das als SA Price gekennzeichnete value-amount-Feld; CS.Money und Premium-Schätzungen werden ignoriert. Der Wert erscheint wie auf SteamAnalyst in USD. Es gibt keine Einzelpreisberechnung und keinen Dateiimport mehr. Der SteamAnalyst-Stand wird angezeigt, wenn er auf der Seite erkennbar ist. Webseitenabrufe werden zehn Minuten zwischengespeichert. Der vorhandene API-Key wird hierfür nicht benötigt und bleibt unveröffentlicht in Supabase Secrets.
 
-### SteamAnalyst-Key geschützt eintragen
-
-1. Im bestehenden Supabase-Projekt die [Edge Function Secrets](https://supabase.com/dashboard/project/rmcwbhhwsxyoqohhgzhe/functions/secrets) öffnen.
-2. Secret mit Name `STEAMANALYST_API_KEY` und deinem Key als Wert speichern. Den Key niemals in GitHub, Browsercode oder Chat eintragen.
-3. Auf KH7 anmelden, CS2 über das Zahnrad öffnen und „Inventarwerte aktualisieren“ wählen. Ein redeploy der Funktion ist nach dem Speichern des Keys nicht nötig.
-
-Der Dienst `cs2-inventory` ist bereits im bestehenden Supabase-Projekt bereitgestellt und benötigt keinen PHP-Server. Er validiert den Benutzer bei Supabase Auth und prüft anschließend die aktive Admin-Sitzung. Der Schlüssel wird ausschließlich auf dem Server verwendet. Cache- und Budgettabellen sind für normale Benutzer und anonyme Besucher gesperrt. Die Datenbankmigration liegt in `supabase/steamanalyst.sql`, die Funktion in `supabase/functions/cs2-inventory`.
-
-Zum Schutz des kostenlosen Tarifs reserviert die Datenbank atomar maximal 100 SteamAnalyst-Preisabfragen in rollierenden 24 Stunden sowie 25 pro Minute. Pro Inventarabruf werden höchstens 20 neue Itempreise abgefragt; vorhandene Preise aus dem 24-Stunden-Cache zählen nicht erneut. Wiederholte Inventarabrufe sind je Account für 30 Sekunden begrenzt. Ergebnisse können bis zu 15 Minuten im Server-Zwischenspeicher stehen. Fehlende Preise und erreichte Limits werden als Teilwert mit ≈ und Anzahl fehlender Items angezeigt. Ein weiterer Abruf kann nach 30 Sekunden zusätzliche Preise ergänzen, soweit das Tagesbudget reicht. Bei rein unbekannten Preisen wird kein scheinbarer Nullwert ausgegeben. Das Budget berücksichtigt nur Abfragen über KH7; andere Anwendungen mit demselben Key verbrauchen zusätzlich Anbieter-Kontingent.
-
-Die frühere PHP-Anbindung in `api/inventory.php` ist eine ungenutzte Alternative für SteamWebAPI. Die GitHub-Pages-Seite ruft jetzt ausschließlich die Supabase-Funktion auf.
-
-Quellen: [SteamAnalyst API](https://api.steamanalyst.com/), [Supabase Secrets](https://supabase.com/docs/guides/functions/secrets), [Frankfurter Wechselkurse](https://frankfurter.dev/).
+Der Dienst cs2-inventory ist im bestehenden Supabase-Projekt bereitgestellt. Er prüft Benutzer und aktive Admin-Sitzung, erlaubt nur feste SteamAnalyst-Inventar-URLs aus numerischen SteamIDs und ruft keine frei eingegebenen URLs ab. Änderungen am Seitenaufbau oder Schutzseiten ergeben einen Fehler statt eines geratenen Werts. Die alten Preis- und Budgettabellen sowie die PHP-Alternative werden von diesem Dienst nicht mehr verwendet.
 
 ### Prüfung
 
-`node tests/modules.test.cjs` prüft die Moduloberfläche mit einem simulierten DOM und festen API-Antworten: Speicherung, Dezimaleingabe, Mengenänderungen, Portfolio-Summen, Preisfehler, mehrere Profile, Teilwerte und Abmeldung. Ergänzend `node --check app.js`, `node --check modules.js` und `git diff --check` ausführen. Diese Prüfungen ersetzen keinen Test echter API-Antworten oder der PHP-Anbindung. Vor Veröffentlichung PHP-Syntax, HTTP 401 ohne Sitzung, HTTP 403 für Nicht-Admins und einen echten Inventarabruf auf dem Zielserver prüfen.
+`node tests/modules.test.cjs` prüft die Moduloberfläche mit einem simulierten DOM und festen API-Antworten: Speicherung, Dezimaleingabe, Mengenänderungen, Portfolio-Summen, Preisfehler, mehrere Profile, Teilwerte und Abmeldung. Ergänzend `node --check app.js`, `node --check modules.js` und `git diff --check` ausführen. Die Tests inventory-function.test.cjs prüfen die Erkennung des SA-Price-Feldes, den Ausschluss anderer Werte, Anmeldung, Cache und Fehler. Ein echter Seitenabruf kann wegen Anbieter-Schutzmaßnahmen gesondert scheitern.
 
 ## Hostinger-Veröffentlichung
 
 Die statischen Webdateien werden direkt in `public_html` entpackt. Die enthaltene `.htaccess` setzt `index.html` als Startseite. Vorhandene Verzeichnisse wie `public_html/uploads` bleiben dabei unverändert und dürfen beim Hochladen nicht gelöscht werden.
 
-Bei einer Steam-Sperre (HTTP 429) kann in der CS2-Verwaltung je Profil das Inventar im eigenen Browser geöffnet, als JSON gespeichert und über „Steam-Inventar importieren“ bewertet werden. Der Import benötigt ein vollständiges Inventar ohne more_items; maximal 2 MB und 5000 Assets. Der Wert ist ausdrücklich der Stand der Datei, kein Live-Wert. Das automatische erste Laden beim Login ist deaktiviert. Periodische Aktualisierung beginnt erst nach einer erfolgreichen Bewertung; fehlgeschlagene Abrufe behalten bestehende Werte bei.

@@ -150,7 +150,7 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   await app.ids['inventory-settings'].emit('click'); assert(app.ids['inventory-panel'].classList.contains('hidden'));
   await app.ids['inventory-settings'].emit('click'); assert(!app.ids['inventory-panel'].classList.contains('hidden'));
   assert.equal(csrfCalls, 4);
-  const currency = card(app, 'cs2').querySelectorAll('select')[0]; currency.value = 'USD'; await currency.emit('change'); await flush();
+  const currency = card(app, 'crypto').querySelectorAll('select')[0]; currency.value = 'USD'; await currency.emit('change'); await flush();
   assert.equal(persisted().currency, 'USD'); assert.match(card(app, 'cs2').textContent, /Noch nicht geladen/);
   assert.match(card(app, 'crypto').textContent, /15\.000,00/); assert.match(card(app, 'crypto').textContent, /Kurs fehlt/);
   const before = persisted().noteItems[0].content;
