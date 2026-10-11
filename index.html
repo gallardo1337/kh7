@@ -84,7 +84,7 @@
   </main>
 
   <div id="lock-container">
-    <span id="header-date" title="Aktuelles Datum"></span>
+    <button id="header-date" type="button" title="Kalender öffnen" aria-label="Kalender öffnen" aria-expanded="false" aria-controls="calendar-modal"></button>
     <span id="clock" title="Aktuelle Uhrzeit"></span>
     <button id="add-tile-btn" class="header-icon-btn hidden" type="button" title="Hinzufügen" aria-label="Kachel oder Modul hinzufügen">＋</button>
     <button id="lock-btn" class="header-icon-btn" type="button" title="Anmelden" aria-label="Anmelden">🔒</button>
@@ -144,6 +144,24 @@
     </div>
   </div>
 
+  <div id="calendar-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="calendar-title">
+    <button id="calendar-backdrop" class="modal-bg" type="button" aria-label="Kalender schließen"></button>
+    <div class="modal-content calendar-content">
+      <div class="modal-header"><span id="calendar-title">Kalender</span><button id="calendar-close" class="module-button" type="button">Schließen</button></div>
+      <div class="calendar-navigation"><button id="calendar-prev" class="module-button" type="button" aria-label="Vorheriger Monat">‹</button><strong id="calendar-month"></strong><button id="calendar-today" class="module-button" type="button">Heute</button><button id="calendar-next" class="module-button" type="button" aria-label="Nächster Monat">›</button></div>
+      <div class="calendar-layout"><section><div id="calendar-weekdays" class="calendar-grid calendar-weekdays" aria-hidden="true"></div><div id="calendar-days" class="calendar-grid" aria-label="Kalendertage"></div></section>
+      <section class="calendar-agenda"><h3 id="calendar-selected"></h3><div id="calendar-events"></div>
+        <form id="calendar-form" class="stacked-form">
+          <label>Titel<input id="calendar-event-title" required maxlength="120" placeholder="Was steht an?"></label>
+          <div class="calendar-form-row"><label>Datum<input id="calendar-event-date" type="date" required></label><label>Uhrzeit (optional)<input id="calendar-event-time" type="time"></label></div>
+          <label>Notiz (optional)<textarea id="calendar-event-description" maxlength="2000" rows="3"></textarea></label>
+          <div class="calendar-form-row"><button id="calendar-save" class="module-button" type="submit">Termin speichern</button><button id="calendar-new" class="module-button" type="button">Neuer Termin</button></div>
+        </form>
+      </section></div>
+      <p id="calendar-status" class="module-muted" role="status" aria-live="polite"></p><button id="calendar-undo" class="module-button hidden" type="button">Löschen rückgängig machen</button>
+    </div>
+  </div>
+
   <div id="changelog-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="changelog-title">
     <button class="modal-bg" type="button" data-close-modal aria-label="Schließen"></button>
     <div class="modal-content changelog-content">
@@ -167,6 +185,7 @@
             Coins, Mengen, Steam-Profile, Währung und aktivierte Module werden ebenfalls automatisch im Konto gespeichert und beim Anmelden auf anderen Geräten geladen. Bestehende Browserdaten werden einmalig übernommen; neue Dashboarddaten werden nicht lokal gespeichert.<br>
             Portfolio-Verlauf für 7, 30 und 90 Tage mit täglicher Online-Speicherung. Steam-Profile zeigen die Wertänderung zum exakt gespeicherten Vortag; ihr Verlauf öffnet in der Inventarverwaltung. Die Historie beginnt mit dem ersten erfolgreichen Abruf und wächst bei geöffnetem KH7; fehlende Tage werden nicht als Nullwerte gewertet.<br>
             Das Datum steht links neben der Uhr im Format „Sonntag, 11.10.2026“ und aktualisiert sich automatisch.<br>
+            Ein Klick auf das Datum öffnet den Kalender: Monatsansicht, Termine mit optionaler Uhrzeit und Notiz, Bearbeiten sowie Löschen mit Rückgängig-Funktion. Termine werden online im eigenen Konto gespeichert.<br>
             Portfolio und CS2-Verwaltung öffnen als kompakte Panels. Notizen und Module passen sich auch kleineren Bildschirmen an.
           </div>
         </div>
@@ -225,5 +244,6 @@
   <script src="config.js"></script>
   <script src="app.js" defer></script>
   <script src="modules.js" defer></script>
+  <script src="calendar.js" defer></script>
 </body>
 </html>
