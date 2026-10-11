@@ -60,7 +60,12 @@ async function inventoryHandler(req) {
       if (Date.now() > deadline) throw new InventoryError("Steam-Inventar lädt zu langsam. Bitte erneut versuchen.");
       const url = `https://steamcommunity.com/inventory/${steamId}/730/2?l=english&count=5000${cursor ? `&start_assetid=${cursor}` : ""}`;
       const inventory = await readJSON(url);
-      if (!inventory.response.ok || inventory.data.success !== 1) throw new InventoryError("Steam-Inventar nicht erreichbar. Bitte Öffentlichkeit prüfen und später erneut versuchen.");
+      if (inventory.response.status === 429) throw new InventoryError("Steam begrenzt Inventarabfragen (HTTP 429). Bitte einige Minuten warten und erneut aktualisieren.", 429);
+      const steamError = typeof inventory.data?.Error === "string" ? inventory.data.Error : typeof inventory.data?.error === "string" ? inventory.data.error : "";
+      if (/private/i.test(steamError)) throw new InventoryError("Steam meldet ein privates Inventar. In Steam unter Profil bearbeiten → Privatsphäre-Einstellungen das Inventar auf Öffentlich stellen.", 403);
+      if (inventory.response.status === 403) throw new InventoryError("Steam verweigert den Serverabruf (HTTP 403). Das kann eine Steam-Sperre des Serverzugriffs sein; ein privates Inventar ist damit nicht bestätigt.", 502);
+      if (!inventory.response.ok) throw new InventoryError(`Steam-Inventarabruf fehlgeschlagen (HTTP ${inventory.response.status}). Bitte später erneut versuchen.`);
+      if (inventory.data?.success !== 1 && inventory.data?.success !== true) throw new InventoryError("Steam liefert keine gültige Inventarantwort (HTTP 200). Bitte Inventar-Öffentlichkeit und SteamID prüfen.");
       const { assets = [], descriptions = [] } = inventory.data;
       if (!Array.isArray(assets) || !Array.isArray(descriptions)) throw new InventoryError("Ungültige Steam-Inventarantwort.");
       const names = new Map(descriptions.map(item => [`${item.classid}:${item.instanceid}`, item.market_hash_name]));

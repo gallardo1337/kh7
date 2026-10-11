@@ -15,9 +15,11 @@ function setup(options = {}) {
     else if (url.endsWith('/rpc/inventory_cached_prices')) data = options.cached || [];
     else if (url.includes('frankfurter')) data = { rate: 0.9, date: '2026-10-09' };
     else if (url.includes('steamcommunity.com/inventory/')) {
+      if (options.steamStatus) return Response.json(options.private ? { success: false, Error: 'This profile is private.' } : {}, { status: options.steamStatus });
       const count = options.many ? 25 : 2;
       data = { success: 1, assets: Array.from({ length: count }, (_, n) => ({ assetid: String(n+1), classid: String(n+1), instanceid: '0', amount: n === 0 ? '2' : '1' })), descriptions: Array.from({ length: count }, (_, n) => ({ classid: String(n+1), instanceid: '0', market_hash_name: 'Item '+n })) };
       if (options.pagination) { data.more_items = true; data.last_assetid = '1'; }
+      if (options.booleanSuccess) data.success = true;
     } else if (url.includes('api.steamanalyst.com')) {
       quoteCalls++; assert.equal(opts.headers.Authorization, 'Bearer secret-test');
       if (options.rateLimit) return Response.json({}, { status: 429 });
@@ -51,5 +53,9 @@ function setup(options = {}) {
   const limited = await (await providerLimit.call()).json(); assert.equal(providerLimit.quotes(), 1); assert.equal(limited.unpricedCount, 24); assert.equal(limited.total, 10);
   assert.equal((await setup({ throttle: true }).call()).status, 429);
   assert.equal((await setup({ pagination: true }).call()).status, 502);
+  assert.equal((await setup({ booleanSuccess: true }).call()).status, 200);
+  const rateLimited = await setup({ steamStatus: 429 }).call(); assert.equal(rateLimited.status, 429); assert.match((await rateLimited.json()).error, /HTTP 429/);
+  const blocked = await setup({ steamStatus: 403 }).call(); assert.match((await blocked.json()).error, /nicht bestätigt/);
+  const privateInventory = await setup({ steamStatus: 403, private: true }).call(); assert.equal(privateInventory.status, 403); assert.match((await privateInventory.json()).error, /privates Inventar/);
   console.log('PASS: edge auth, missing secret, validation, quantities, currency, cache, budgets, provider limits, pagination.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
