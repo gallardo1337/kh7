@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const path = require('node:path');
 
 class Node {
-  constructor(tag) { this.tagName = tag; this.children = []; this.listeners = {}; this.dataset = {}; this.attrs = {}; this.value = ''; this.className = ''; this._text = ''; }
+  constructor(tag) { this.tagName = tag; this.children = []; this.listeners = {}; this.dataset = {}; this.attrs = {}; this.value = ''; this.className = ''; this._text = ''; this.style = { setProperty(name,value) { this[name]=value; } }; }
   get classList() { return { add: (...values) => { this.className = [...new Set([...this.className.split(' '), ...values])].join(' '); }, remove: (...values) => { this.className = this.className.split(' ').filter(v => !values.includes(v)).join(' '); }, contains: value => this.className.split(' ').includes(value), toggle: (value, force) => { const add = force ?? !this.classList.contains(value); this.classList[add ? 'add' : 'remove'](value); } }; }
   set textContent(value) { this._text = value; this.children = []; }
   get textContent() { return this._text + this.children.map(n => n.textContent).join(''); }
@@ -13,7 +13,7 @@ class Node {
   removeAttribute(name) { delete this.attrs[name]; }
   setAttribute(name, value) { this.attrs[name] = value; }
   addEventListener(name, fn) { (this.listeners[name] ||= []).push(fn); }
-  async emit(name, props = {}) { for (const fn of this.listeners[name] || []) await fn({ target: this, preventDefault() {}, ...props }); }
+  async emit(name, props = {}) { for (const fn of this.listeners[name] || []) await fn({ target: this, preventDefault() {}, stopPropagation() {}, ...props }); }
   querySelectorAll(selector) {
     const matches = n => selector.split(',').some(s => {
       if (s.startsWith('[data-')) { const key = s.slice(6, -1).replace(/-([a-z])/g, (_, l) => l.toUpperCase()); return Object.hasOwn(n.dataset, key); }
@@ -23,6 +23,8 @@ class Node {
   }
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
   focus() {}
+  setPointerCapture() {}
+  getBoundingClientRect() { return {width:parseFloat(this.style.width)||272,height:parseFloat(this.style.height)||340}; }
 }
 
 const code = fs.readFileSync(path.join(__dirname, '../modules.js'), 'utf8');
@@ -123,5 +125,28 @@ const sync = async () => { await new Promise(resolve => setTimeout(resolve, 460)
   // A failed initial read cannot replace an existing remote account with defaults.
   cloudError=true; const blocked=create(); blocked.session({isAdmin:true,userId:'user-a'}); await sync(); blocked.openMenu(); assert(blocked.picker.classList.contains('hidden')); assert.equal(persisted().holdings[0].amount,1.5);
   cloudError=false; blocked.online(); await flush(); assert.equal(blocked.ids['inventory-values'].children.length,2);
+  // Resizing and pinning survive a fresh login, cancellation never persists a size.
+  await enable(blocked,'notes'); await sync();
+  let resizable=blocked.ids['notes-dock'].children[0];
+  let grip=resizable.querySelector('[data-note-resize]');
+  await grip.emit('pointerdown',{pointerId:1,clientX:0,clientY:0,button:0});
+  await grip.emit('pointermove',{pointerId:1,clientX:88,clientY:100});
+  await grip.emit('pointerup',{pointerId:1}); await sync();
+  assert.equal(persisted().noteItems[1].width,360); assert.equal(persisted().noteItems[1].height,440);
+  await grip.emit('pointerdown',{pointerId:2,clientX:0,clientY:0,button:0});
+  await grip.emit('pointermove',{pointerId:2,clientX:9999,clientY:9999});
+  await grip.emit('pointercancel',{pointerId:2}); assert.equal(resizable.style.width,'360px');
+  await resizable.querySelector('[data-note-pin]').emit('click'); await sync(); assert.equal(persisted().noteItems[1].pinned,true);
+  await blocked.ids['notes-dock'].children[0].querySelector('[data-note-drag]').emit('click'); await sync();
+  assert.equal(blocked.ids['notes-dock-right'].children[0].dataset.noteId,persisted().noteItems[1].id);
+  const sizedPeer=create(); sizedPeer.session({isAdmin:true,userId:'user-a'}); await flush();
+  const pinned=sizedPeer.ids['notes-dock-right'].children[0]; assert.equal(pinned.style.width,'360px'); assert.equal(pinned.style.height,'440px');
+  assert.equal(pinned.querySelector('[data-note-pin]').attrs['aria-pressed'],'true');
+  await getButton(pinned,'−').emit('click'); assert.equal(pinned.style.height,''); await getButton(pinned,'+').emit('click'); assert.equal(pinned.style.height,'440px');
+  await pinned.querySelector('[data-note-resize]').emit('keydown',{key:'ArrowDown'}); await sync(); assert.equal(persisted().noteItems[1].height,460);
+  await pinned.querySelector('[data-note-pin]').emit('click'); await sync();
+  assert.equal(sizedPeer.ids['notes-dock-right'].children[0].dataset.noteId,persisted().noteItems[0].id);
+  await sizedPeer.ids['notes-dock-right'].children[1].querySelector('[data-note-drag]').emit('keydown',{key:'ArrowUp'}); await sync();
+  assert.equal(persisted().noteItems[0].width,360);
   console.log('PASS: one-time migration, online-only writes, notes and module restoration on fresh devices, stale local data, collapse/color/drag/delete, reconnect retry, failed initial reads, and account isolation.');
 })().catch(error => { console.error(error); process.exitCode=1; });

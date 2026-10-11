@@ -135,3 +135,23 @@
   .notes-dock-right { width: 100%; margin: 0; padding: 0; }
   body:has(.notes-dock:not(.hidden)) .dashboard-layout { display: block; margin: 0 314px; max-width: none; padding: 0; }
 }
+
+.module-card.sticky-note { max-width: 100%; box-sizing: border-box; }
+.note-pinned .note-pin { background: #ffffff80; border-color: #302a2570; }
+.sticky-note .module-heading .note-pin { font-size: .85rem; padding: 3px; min-width: 25px; }
+.sticky-note .note-resize-handle { position: absolute; bottom: 4px; right: 5px; z-index: 1; border: 0; background: transparent; padding: 2px 4px; cursor: nwse-resize; touch-action: none; font-size: 1rem; }
+.sticky-note[data-note-side="right"] .note-resize-handle { left: 5px; right: auto; transform: scaleX(-1); cursor: nesw-resize; }
+.note-collapsed .note-resize-handle { display: none; }
+.note-sized { display: flex; flex-direction: column; }
+.note-sized .module-heading { flex: 0 0 auto; }
+.note-sized .note-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.note-sized .note-palette { flex: 0 0 auto; }
+.module-card.sticky-note.note-sized textarea { flex: 1; min-height: 40px; height: 100%; resize: none; }
+.module-card.sticky-note textarea { resize: none; }
+@media (min-width: 1101px) {
+  .notes-dock:not(.notes-dock-right) { width: min(var(--left-note-width, 280px), max(280px, calc((100vw - 700px) / 2))); }
+  .dashboard-right-rail { width: min(var(--right-note-width, 280px), max(280px, calc((100vw - 700px) / 2))); }
+  body:has(.notes-dock:not(.hidden)) .dashboard-layout { margin-left: calc(min(var(--left-note-width, 280px), max(280px, calc((100vw - 700px) / 2))) + 34px); margin-right: calc(min(var(--right-note-width, 280px), max(280px, calc((100vw - 700px) / 2))) + 34px); }
+}
+
+.notes-dock-right { justify-items: end; }

@@ -128,7 +128,7 @@
     return source.slice(0, 50).filter(note => note && typeof note === "object").map(note => {
       let id = typeof note.id === "string" && /^[a-zA-Z0-9-]{1,80}$/.test(note.id) && !ids.has(note.id) ? note.id : newNoteId();
       ids.add(id);
-      return { id, content: typeof note.content === "string" ? note.content.slice(0, 20000) : "", color: noteColors.some(([key]) => key === note.color) ? note.color : "yellow", collapsed: note.collapsed === true, side: note.side === "right" ? "right" : "left" };
+      return { id, content: typeof note.content === "string" ? note.content.slice(0, 20000) : "", color: noteColors.some(([key]) => key === note.color) ? note.color : "yellow", collapsed: note.collapsed === true, side: note.side === "right" ? "right" : "left", pinned: note.pinned === true, width: Number.isFinite(note.width) ? Math.max(220, Math.min(480, Math.round(note.width))) : null, height: Number.isFinite(note.height) ? Math.max(220, Math.min(800, Math.round(note.height))) : null };
     });
   }
   function normalizeSettings(data) {
@@ -193,6 +193,7 @@
     
   }
   function render() {
+    updateNoteRailWidths();
     grid.replaceChildren();
     notesDock.replaceChildren(); rightNotesDock.replaceChildren(); portfolioPanel.replaceChildren(); inventoryPanel.replaceChildren();
     const showNotes = Boolean(userId && cloudReady && settings.enabled.includes("notes"));
@@ -214,7 +215,7 @@
     for (const id of settings.enabled) {
       const module = catalog.find(item => item.id === id);
       if (id === "notes") {
-        settings.noteItems.forEach((note, index) => {
+        [...settings.noteItems].sort((a, b) => Number(b.pinned) - Number(a.pinned)).forEach((note, index) => {
           const card = el("article", undefined, "module-card");
           card.dataset.module = "notes"; card.dataset.noteId = note.id;
           renderNotes(card, note, index); (note.side === "right" ? rightNotesDock : notesDock).append(card);
@@ -252,6 +253,7 @@
     });
     handle.addEventListener("dragend", () => { draggedNoteId = null; document.body.classList.remove("notes-dragging"); render(); });
     handle.addEventListener("keydown", event => {
+      if (event.key === "ArrowUp" || event.key === "ArrowDown") { event.preventDefault(); reorderNote(note, event.key === "ArrowUp" ? -1 : 1); }
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); moveNote(note.id, event.key === "ArrowRight" ? "right" : "left"); }
     });
     card.addEventListener("dragover", event => { if (draggedNoteId) event.preventDefault(); });
@@ -260,19 +262,25 @@
       event.preventDefault(); event.stopPropagation();
       moveNote(draggedNoteId, note.side === "right" ? "right" : "left", note.id);
     });
-    const title = el("h3", `Notiz ${index + 1}`);
+    const pin = button("📌", () => { note.pinned = !note.pinned; save(); render(); });
+    pin.classList.add("note-pin"); pin.dataset.notePin = "";
+    pin.title = note.pinned ? "Notiz lösen" : "Notiz anpinnen";
+    pin.setAttribute("aria-label", pin.title); pin.setAttribute("aria-pressed", String(Boolean(note.pinned)));
+    card.classList.toggle("note-pinned", Boolean(note.pinned));
+    const title = el("h3", `Notiz ${settings.noteItems.indexOf(note) + 1}`);
     const body = el("div", undefined, "note-content"); body.id = `note-body-${note.id}`;
     const toggle = button("", () => { note.collapsed = !note.collapsed; updateCollapsed(); save(true); });
     toggle.dataset.noteToggle = "";
     toggle.setAttribute("aria-controls", body.id);
     function updateCollapsed() {
+      applyNoteSize(card, note);
       body.classList.toggle("hidden", note.collapsed);
       card.classList.toggle("note-collapsed", note.collapsed);
       toggle.textContent = note.collapsed ? "+" : "−";
       toggle.title = note.collapsed ? "Aufklappen" : "Zuklappen";
       toggle.setAttribute("aria-label", toggle.title);
       toggle.setAttribute("aria-expanded", String(!note.collapsed));
-      title.textContent = note.collapsed && note.content.trim() ? note.content.trim().split("\n")[0] : `Notiz ${index + 1}`;
+      title.textContent = note.collapsed && note.content.trim() ? note.content.trim().split("\n")[0] : `Notiz ${settings.noteItems.indexOf(note) + 1}`;
     }
     const remove = button("", () => {
       if (!window.confirm("Diese Notiz löschen?")) return;
@@ -282,9 +290,10 @@
     const binIcon = el("span", "", "trash-icon"); binIcon.setAttribute("aria-hidden", "true"); remove.append(binIcon);
     remove.classList.add("note-delete"); remove.title = "Notiz löschen";
     remove.setAttribute("aria-label", "Notiz löschen");
-    heading.append(handle, title, toggle, remove); card.append(heading, body); updateCollapsed();
+    heading.append(handle, title, pin, toggle, remove); card.append(heading, body); updateCollapsed();
     card.classList.add("sticky-note");
     card.dataset.noteColor = note.color;
+    card.dataset.noteSide = note.side || "left";
     const palette = el("div", undefined, "note-palette");
     palette.setAttribute("role", "group");
     palette.setAttribute("aria-label", "Notizfarbe");
@@ -316,6 +325,58 @@
       save(true);
     });
     body.append(palette, input, status);
+    const resize = button("↘", () => {}); resize.classList.add("note-resize-handle"); resize.dataset.noteResize = "";
+    resize.title = "Größe ziehen · Pfeiltasten ändern die Größe"; resize.setAttribute("aria-label", "Notizgröße ändern");
+    let resizeStart = null;
+    resize.addEventListener("pointerdown", event => {
+      if (event.button > 0 || event.isPrimary === false || note.collapsed) return;
+      event.preventDefault(); event.stopPropagation();
+      const rect = card.getBoundingClientRect();
+      resizeStart = { x: event.clientX, y: event.clientY, width: rect.width, height: rect.height, oldWidth: note.width, oldHeight: note.height, pointerId: event.pointerId };
+      resize.setPointerCapture(event.pointerId);
+    });
+    resize.addEventListener("pointermove", event => {
+      if (!resizeStart || event.pointerId !== resizeStart.pointerId) return;
+      const direction = note.side === "right" ? -1 : 1;
+      note.width = Math.max(220, Math.min(480, Math.round(resizeStart.width + (event.clientX - resizeStart.x) * direction)));
+      note.height = Math.max(220, Math.min(800, Math.round(resizeStart.height + event.clientY - resizeStart.y)));
+      updateNoteRailWidths(); applyNoteSize(card, note);
+    });
+    function finishResize(event, cancelled) {
+      if (!resizeStart || event.pointerId !== resizeStart.pointerId) return;
+      if (cancelled) { note.width = resizeStart.oldWidth; note.height = resizeStart.oldHeight; }
+      resizeStart = null; updateNoteRailWidths(); applyNoteSize(card, note);
+      if (!cancelled) save();
+    }
+    resize.addEventListener("pointerup", event => finishResize(event, false));
+    resize.addEventListener("pointercancel", event => finishResize(event, true));
+    resize.addEventListener("keydown", event => {
+      if (note.collapsed || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+      event.preventDefault();
+      const rect = card.getBoundingClientRect();
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") note.width = Math.max(220, Math.min(480, Math.round(rect.width) + (event.key === "ArrowRight" ? 20 : -20)));
+      else note.height = Math.max(220, Math.min(800, Math.round(rect.height) + (event.key === "ArrowDown" ? 20 : -20)));
+      updateNoteRailWidths(); applyNoteSize(card, note); save();
+    });
+    card.append(resize);
+  }
+  function applyNoteSize(card, note) {
+    card.style.width = note.width ? `${note.width}px` : "";
+    card.style.height = !note.collapsed && note.height ? `${note.height}px` : "";
+    card.classList.toggle("note-sized", Boolean(note.height && !note.collapsed));
+  }
+  function updateNoteRailWidths() {
+    for (const side of ["left", "right"]) {
+      const width = Math.max(280, ...settings.noteItems.filter(note => (note.side || "left") === side).map(note => (note.width || 272) + 8));
+      document.body.style.setProperty(`--${side}-note-width`, `${width}px`);
+    }
+  }
+  function reorderNote(note, direction) {
+    const peers = settings.noteItems.filter(item => (item.side || "left") === (note.side || "left") && Boolean(item.pinned) === Boolean(note.pinned));
+    const other = peers[peers.indexOf(note) + direction]; if (!other) return;
+    const from = settings.noteItems.indexOf(note), to = settings.noteItems.indexOf(other);
+    [settings.noteItems[from], settings.noteItems[to]] = [settings.noteItems[to], settings.noteItems[from]];
+    save(); render();
   }
   function moveNote(id, side, beforeId) {
     if (!userId) return;
