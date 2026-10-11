@@ -15,10 +15,15 @@
   <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
+  <div class="dashboard-status-row">
   <button id="weather-info" class="weather-info" type="button" aria-expanded="false" aria-controls="weather-panel">
     <span class="weather-placeholder">--°C</span>
   </button>
+  <button id="portfolio-info" class="portfolio-info hidden" type="button" aria-expanded="false" aria-controls="portfolio-panel" aria-label="Krypto-Portfolio aufklappen">Portfolio —</button>
+  </div>
   <div id="weather-panel" class="weather-panel hidden" aria-live="polite"></div>
+  <div id="portfolio-panel" class="portfolio-panel hidden" aria-label="Mein Krypto-Portfolio"></div>
+  <aside id="notes-dock" class="notes-dock hidden" aria-label="Meine Haftnotiz"></aside>
 
   <header>
     <img src="images/logo_transparent.png" alt="KH7" class="logo" id="logo">

@@ -9,6 +9,17 @@
   ];
   const panel = document.getElementById("modules-panel");
   const grid = document.getElementById("modules-grid");
+  const notesDock = document.getElementById("notes-dock");
+  const portfolioButton = document.getElementById("portfolio-info");
+  const portfolioPanel = document.getElementById("portfolio-panel");
+  let portfolioOpen = false;
+  let sessionEpoch = 0;
+  let cloudReady = false;
+  let noteDirty = false;
+  let noteRevision = 0;
+  let cloudTimer;
+  let cloudWrites = Promise.resolve();
+  let noteStatus = "Notiz wird aus deinem Konto geladen …";
   let userId = null;
   let generation = 0;
   let controllers = [];
@@ -37,10 +48,61 @@
   function message(parent, text) { const node = el("p", text, "module-muted"); parent.append(node); return node; }
   function money(value) { return new Intl.NumberFormat("de-DE", { style: "currency", currency: settings.currency }).format(value); }
   function storageKey() { return `kh7-modules-v1:${userId}`; }
-  function save() {
+  function save(syncNote = false) {
     if (!userId) return false;
-    try { localStorage.setItem(storageKey(), JSON.stringify(settings)); return true; }
+    if (syncNote) { noteRevision++; noteDirty = true; queueNoteSave(); }
+    try { localStorage.setItem(storageKey(), JSON.stringify({ ...settings, notesPending: noteDirty })); return true; }
     catch { showToast("Speichern im Browser nicht möglich. Bitte deine Eingaben sichern.", "error"); return false; }
+  }
+  function updateNoteStatus(text) {
+    noteStatus = text;
+    const status = notesDock.querySelector("[data-note-status]");
+    if (status) status.textContent = text;
+  }
+  function queueNoteSave() {
+    updateNoteStatus(cloudReady ? "Wird in deinem Konto gespeichert …" : "Notiz wird synchronisiert …");
+    clearTimeout(cloudTimer);
+    if (!cloudReady) return;
+    cloudTimer = window.setTimeout(writeNote, 400);
+  }
+  function writeNote() {
+    if (!userId || !cloudReady || !noteDirty) return;
+    const epoch = sessionEpoch;
+    const revision = noteRevision;
+    const client = state.client;
+    const payload = { user_id: userId, content: settings.notes, color: settings.noteColor, enabled: settings.enabled.includes("notes"), updated_at: new Date().toISOString() };
+    cloudWrites = cloudWrites.catch(() => {}).then(async () => {
+      if (epoch !== sessionEpoch) return;
+      try {
+        const result = await client.from("dashboard_notes").upsert(payload, { onConflict: "user_id" });
+        if (result.error) throw result.error;
+        if (epoch === sessionEpoch && revision === noteRevision) { noteDirty = false; save(); updateNoteStatus("In deinem Konto gespeichert"); }
+      } catch {
+        if (epoch === sessionEpoch) updateNoteStatus("Cloud-Speicherung fehlgeschlagen · Eingabe bleibt als Browser-Sicherung erhalten.");
+      }
+    });
+  }
+  async function loadCloudNotes() {
+    const epoch = sessionEpoch;
+    const revision = noteRevision;
+    try {
+      const result = await state.client.from("dashboard_notes").select("content,color,enabled").eq("user_id", userId).maybeSingle();
+      if (epoch !== sessionEpoch) return;
+      if (result.error) throw result.error;
+      cloudReady = true;
+      if (revision === noteRevision && !noteDirty && result.data) {
+        settings.notes = result.data.content;
+        settings.noteColor = noteColors.some(([color]) => color === result.data.color) ? result.data.color : "yellow";
+        settings.enabled = settings.enabled.filter(id => id !== "notes");
+        if (result.data.enabled) settings.enabled.push("notes");
+        noteDirty = false;
+        save(); updateNoteStatus("Aus deinem Konto geladen"); render();
+      } else if (noteDirty || settings.notes || settings.enabled.includes("notes")) {
+        noteDirty = true; queueNoteSave();
+      } else updateNoteStatus("Wird automatisch in deinem Konto gespeichert");
+    } catch {
+      if (epoch === sessionEpoch) updateNoteStatus("Cloud nicht erreichbar · bitte später erneut versuchen.");
+    }
   }
   function load() {
     try {
@@ -50,6 +112,7 @@
         enabled: [...new Set(Array.isArray(data.enabled) ? data.enabled.filter(id => catalog.some(item => item.id === id)) : [])],
         notes: typeof data.notes === "string" ? data.notes.slice(0, 20000) : "",
         noteColor: noteColors.some(([key]) => key === data.noteColor) ? data.noteColor : "yellow",
+        notesPending: Boolean(data.notesPending),
         currency: ["EUR", "USD"].includes(data.currency) ? data.currency : "EUR",
         holdings: Array.isArray(data.holdings) ? data.holdings.filter(h => h && /^[A-Z0-9]{1,15}$/.test(h.symbol) && Number.isFinite(h.amount) && h.amount > 0).slice(0, 30) : [],
         profiles: Array.isArray(data.profiles) ? data.profiles.filter(p => p && typeof p.label === "string" && validProfile(p.profile)).slice(0, 10) : [],
@@ -79,19 +142,36 @@
   function setSession(detail) {
     const nextId = detail.isAdmin ? detail.userId : null;
     if (nextId === userId) return;
+    sessionEpoch++; clearTimeout(cloudTimer);
+    cloudReady = false; noteDirty = false; noteRevision = 0;
+    noteStatus = "Notiz wird aus deinem Konto geladen …";
+    portfolioOpen = false;
     generation++;
     cancelRequests();
     userId = nextId;
     prices.clear(); inventories.clear(); cryptoTime = null;
     cryptoBusy = false; inventoryBusy = false;
     settings = userId ? load() : defaults();
+    noteDirty = Boolean(settings.notesPending);
     picker.classList.add("hidden");
     panel.classList.toggle("hidden", !userId);
     render();
+    if (userId) loadCloudNotes();
     if (userId && settings.enabled.includes("crypto") && settings.holdings.length) refreshCrypto();
   }
   function render() {
     grid.replaceChildren();
+    notesDock.replaceChildren(); portfolioPanel.replaceChildren();
+    const showNotes = Boolean(userId && settings.enabled.includes("notes"));
+    const showPortfolio = Boolean(userId && settings.enabled.includes("crypto"));
+    panel.classList.toggle("hidden", !userId || !settings.enabled.includes("cs2"));
+    notesDock.classList.toggle("hidden", !showNotes);
+    portfolioButton.classList.toggle("hidden", !showPortfolio);
+    portfolioPanel.classList.toggle("hidden", !showPortfolio || !portfolioOpen);
+    portfolioButton.setAttribute("aria-expanded", String(showPortfolio && portfolioOpen));
+    const total = settings.holdings.reduce((sum, h) => sum + (prices.get(h.symbol)?.price || 0) * h.amount, 0);
+    const complete = settings.holdings.length && settings.holdings.every(h => prices.has(h.symbol));
+    portfolioButton.textContent = `Portfolio ${prices.size ? (complete ? "" : "≈ ") + money(total) : "—"}`;
     document.getElementById("modules-empty").classList.toggle("hidden", settings.enabled.length > 0);
     if (!userId) return;
     for (const id of settings.enabled) {
@@ -102,11 +182,11 @@
       heading.append(el("h3", module.title), button("Ausblenden", () => {
         generation++; cancelRequests(); cryptoBusy = false; inventoryBusy = false;
         settings.enabled = settings.enabled.filter(value => value !== id);
-        save(); render();
+        save(id === "notes"); render();
       }));
       card.append(heading);
       module.render(card);
-      grid.append(card);
+      (id === "notes" ? notesDock : id === "crypto" ? portfolioPanel : grid).append(card);
     }
   }
   function renderNotes(card) {
@@ -120,7 +200,7 @@
         settings.noteColor = color;
         card.dataset.noteColor = color;
         palette.querySelectorAll("button").forEach(item => item.setAttribute("aria-pressed", String(item.dataset.color === color)));
-        save();
+        save(true);
       });
       swatch.className = "note-swatch";
       swatch.dataset.color = color;
@@ -134,13 +214,15 @@
     input.placeholder = "Was möchtest du festhalten?";
     input.maxLength = 20000;
     input.value = settings.notes;
-    const status = el("p", "Nur in diesem Browser gespeichert.", "module-muted");
+    const status = el("p", noteStatus, "module-muted");
+    status.dataset.noteStatus = "";
     status.setAttribute("aria-live", "polite");
     input.addEventListener("input", () => {
       settings.notes = input.value;
-      status.textContent = save() ? "Gespeichert · nur in diesem Browser" : "Nicht gespeichert – bitte Text sichern.";
+      save(true);
     });
     card.append(palette, input, status);
+    card.append(button("Synchronisieren", () => { if (cloudReady) { noteDirty = true; queueNoteSave(); } else loadCloudNotes(); }));
   }
   function field(form, label, input) {
     const wrapper = el("label", label);
@@ -253,7 +335,7 @@
     finally {
       if (current === generation) {
         cryptoBusy = false; render();
-        if (errorMessage) { const status = grid.querySelector("[data-crypto-status]"); if (status) status.textContent = errorMessage; }
+        if (errorMessage) { const status = portfolioPanel.querySelector("[data-crypto-status]"); if (status) status.textContent = errorMessage; }
       }
     }
   }
@@ -361,19 +443,21 @@
       if (!userId || settings.enabled.includes(module.id)) return;
       generation++; cancelRequests(); cryptoBusy = false; inventoryBusy = false;
       settings.enabled.push(module.id);
-      save(); render(); closePicker();
+      save(module.id === "notes");
+      if (module.id === "crypto") portfolioOpen = true;
+      render(); closePicker();
       if (module.id === "crypto") refreshCrypto();
     });
     item.dataset.addModule = module.id;
   }
-  content.append(list); message(content, "Eingaben bleiben beim Ausblenden erhalten. Module und Inhalte werden nur in diesem Browser gespeichert."); content.append(button("Fertig", closePicker)); picker.append(backdrop, content); document.body.append(picker);
+  content.append(list); message(content, "Notiztext und Farbe werden in deinem Konto gespeichert. Portfolio-Mengen und Profillisten bleiben in diesem Browser."); content.append(button("Fertig", closePicker)); picker.append(backdrop, content); document.body.append(picker);
   function closePicker() { picker.classList.add("hidden"); document.getElementById("add-tile-btn").focus(); }
   window.KH7_OPEN_ADD_MENU = () => {
     if (!userId) return;
     list.querySelectorAll("[data-add-module]").forEach(item => {
       item.disabled = settings.enabled.includes(item.dataset.addModule);
       const module = catalog.find(value => value.id === item.dataset.addModule);
-      item.querySelector("span").textContent = item.disabled ? "Bereits hinzugefügt · in der Seitenleiste verfügbar" : module.description;
+      item.querySelector("span").textContent = item.disabled ? "Bereits auf deinem Dashboard hinzugefügt" : module.description;
     });
     picker.classList.remove("hidden"); list.querySelector("button").focus();
   };
@@ -386,6 +470,21 @@
     }
   });
   window.addEventListener("kh7-session", event => setSession(event.detail));
+  portfolioButton.addEventListener("click", () => {
+    portfolioOpen = !portfolioOpen;
+    portfolioPanel.classList.toggle("hidden", !portfolioOpen);
+    portfolioButton.setAttribute("aria-expanded", String(portfolioOpen));
+    if (portfolioOpen) {
+      document.getElementById("weather-panel")?.classList.add("hidden");
+      document.getElementById("weather-info")?.setAttribute("aria-expanded", "false");
+    }
+  });
+  document.getElementById("weather-info")?.addEventListener("click", () => {
+    portfolioOpen = false; portfolioPanel.classList.add("hidden"); portfolioButton.setAttribute("aria-expanded", "false");
+  });
+  document.addEventListener?.("keydown", event => {
+    if (event.key === "Escape") { portfolioOpen = false; portfolioPanel.classList.add("hidden"); portfolioButton.setAttribute("aria-expanded", "false"); }
+  });
   if (typeof state !== "undefined") setSession({ isAdmin: state.isAdmin, userId: state.user?.id });
   window.setInterval(() => { if (!document.hidden && userId) refreshCrypto(); }, 300000);
 })();

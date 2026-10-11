@@ -26,12 +26,14 @@ class Node {
 
 const code = fs.readFileSync(path.join(__dirname, '../modules.js'), 'utf8');
 const store = new Map();
+const cloud = new Map();
+let cloudError = false;
 let failCrypto = false;
 let failProfile = false;
 let csrfCalls = 0;
 const markets = { XXBTZEUR: { wsname: 'XBT/EUR', altname: 'XBTEUR' }, XETHZEUR: { wsname: 'ETH/EUR', altname: 'ETHEUR' }, XXBTZUSD: { wsname: 'XBT/USD', altname: 'XBTUSD' } };
 function create() {
-  const ids = Object.fromEntries(['modules-panel', 'modules-grid', 'modules-empty', 'add-tile-btn'].map(id => [id, new Node('div')]));
+  const ids = Object.fromEntries(['modules-panel', 'modules-grid', 'modules-empty', 'add-tile-btn', 'notes-dock', 'portfolio-info', 'portfolio-panel'].map(id => [id, new Node('div')]));
   ids['modules-panel'].className = 'hidden';
   const document = { body: new Node('body'), getElementById: id => ids[id], createElement: tag => new Node(tag), hidden: false };
   const events = {};
@@ -39,7 +41,13 @@ function create() {
   let tileDialogs = 0;
   const context = {
     document, localStorage: { getItem: key => store.get(key) || null, setItem: (key, value) => store.set(key, value) },
-    state: { isAdmin: false, user: null, client: { auth: { getSession: async () => ({ data: { session: { access_token: 'valid-token' } } }) } } },
+    state: { isAdmin: false, user: null, client: { from: table => {
+      assert.equal(table, 'dashboard_notes');
+      return {
+        select: () => ({ eq: (column, id) => ({ maybeSingle: async () => ({ data: cloud.get(id) || null, error: cloudError ? { message: 'offline' } : null }) }) }),
+        upsert: async payload => { if (cloudError) return { error: { message: 'offline' } }; cloud.set(payload.user_id, { ...payload }); return { error: null }; },
+      };
+    }, auth: { getSession: async () => ({ data: { session: { access_token: 'valid-token' } } }) } } },
     showToast: message => alerts.push(message), openAddTileModal: () => tileDialogs++, AbortController, clearTimeout, setTimeout,
     window: { setTimeout, setInterval() {}, addEventListener: (event, fn) => { events[event] = fn; } },
     fetch: async (url, options) => {
@@ -62,7 +70,7 @@ function create() {
   return { ids, document, alerts, openMenu: () => context.window.KH7_OPEN_ADD_MENU(), tileDialogs: () => tileDialogs, session: detail => events['kh7-session']({ detail }), grid: ids['modules-grid'], picker: document.body.children[0] };
 }
 const flush = async () => { for (let n = 0; n < 12; n++) await Promise.resolve(); };
-const card = (app, id) => app.grid.children.find(c => c.dataset.module === id);
+const card = (app, id) => [...app.grid.children, ...app.ids['notes-dock'].children, ...app.ids['portfolio-panel'].children].find(c => c.dataset.module === id);
 const getButton = (parent, text) => parent.querySelectorAll('button').find(b => b.textContent === text);
 const enable = async (app, id) => { app.openMenu(); const item = app.picker.querySelectorAll('button').find(n => n.dataset.addModule === id); await item.emit('click'); await flush(); };
 const addCoin = async (app, symbol, amount) => {
@@ -78,14 +86,14 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   assert(app.ids['modules-panel'].classList.contains('hidden'));
   app.openMenu(); assert(app.picker.classList.contains('hidden'));
   app.session({ isAdmin: true, userId: 'user-a' });
-  assert(!app.ids['modules-panel'].classList.contains('hidden'));
+  assert(app.ids['modules-panel'].classList.contains('hidden'));
   app.openMenu(); assert(!app.picker.classList.contains('hidden'));
   const linkChoice = app.picker.querySelectorAll('button').find(b => b.textContent.startsWith('Link-Kachel'));
   await linkChoice.emit('click'); assert.equal(app.tileDialogs(), 1); assert(app.picker.classList.contains('hidden'));
   await enable(app, 'notes');
   assert(app.picker.classList.contains('hidden'));
   app.openMenu(); assert(app.picker.querySelectorAll('button').find(b => b.dataset.addModule === 'notes').disabled);
-  await enable(app, 'notes'); assert.equal(app.grid.children.length, 1);
+  await enable(app, 'notes'); assert.equal(app.ids['notes-dock'].children.length, 1);
   const notes = card(app, 'notes').querySelector('textarea'); notes.value = '<script>alert(1)</script> Meine Notiz'; await notes.emit('input');
   assert.equal(persisted().notes, notes.value);
   assert.equal(card(app, 'notes').dataset.noteColor, 'yellow');
@@ -102,6 +110,10 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   assert.match(card(app, 'crypto').textContent, /5\.000,00/);
   await addCoin(app, 'ETH', '2');
   assert.match(card(app, 'crypto').textContent, /9\.000,00/);
+  assert.match(app.ids['portfolio-info'].textContent, /9\.000,00/);
+  await app.ids['portfolio-info'].emit('click'); assert(app.ids['portfolio-panel'].classList.contains('hidden'));
+  await app.ids['portfolio-info'].emit('click'); assert(!app.ids['portfolio-panel'].classList.contains('hidden'));
+  assert.equal(app.ids['portfolio-info'].attrs['aria-expanded'], 'true');
   await addCoin(app, 'BTC', '1');
   assert.equal(persisted().holdings.length, 2);
   assert.match(card(app, 'crypto').textContent, /14\.000,00/);
@@ -113,6 +125,7 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   assert.match(card(app, 'crypto').textContent, /Letzte Kurse bleiben sichtbar/);
   assert.match(card(app, 'crypto').textContent, /14\.000,00/); failCrypto = false;
   await enable(app, 'cs2');
+  assert(!app.ids['modules-panel'].classList.contains('hidden'));
   await addProfile(app, 'Hauptaccount', 'https://steamcommunity.com/profiles/76500000000000001');
   await addProfile(app, 'Lager', '76500000000000002');
   await addProfile(app, 'Duplikat', '76500000000000001'); assert.equal(persisted().profiles.length, 2);
@@ -130,11 +143,30 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   await enable(app, 'notes'); assert.equal(card(app, 'notes').querySelector('textarea').value, before);
   assert.equal(card(app, 'notes').dataset.noteColor, 'pink');
   app.session({ isAdmin: false, userId: null }); assert.equal(app.grid.children.length, 0); assert(app.ids['modules-panel'].classList.contains('hidden'));
+  assert.equal(app.ids['notes-dock'].children.length, 0); assert.equal(app.ids['portfolio-panel'].children.length, 0);
   app.session({ isAdmin: true, userId: 'user-b' }); assert.equal(app.grid.children.length, 0);
   app.session({ isAdmin: true, userId: 'user-a' }); assert.equal(card(app, 'notes').querySelector('textarea').value, before);
   const restored = create(); restored.session({ isAdmin: true, userId: 'user-a' }); assert.equal(card(restored, 'notes').querySelector('textarea').value, before);
   assert.equal(card(restored, 'notes').dataset.noteColor, 'pink');
   const invalidColor = persisted(); invalidColor.noteColor = 'invalid'; store.set('kh7-modules-v1:user-a', JSON.stringify(invalidColor));
   const repaired = create(); repaired.session({ isAdmin: true, userId: 'user-a' }); assert.equal(card(repaired, 'notes').dataset.noteColor, 'yellow');
+  await flush();
+  const syncedNote = card(repaired, 'notes').querySelector('textarea'); syncedNote.value = 'Geräteübergreifende Notiz'; await syncedNote.emit('input');
+  await card(repaired, 'notes').querySelectorAll('button').find(b => b.dataset.color === 'blue').emit('click');
+  await new Promise(resolve => setTimeout(resolve, 460)); await flush();
+  assert.equal(cloud.get('user-a').content, 'Geräteübergreifende Notiz'); assert.equal(cloud.get('user-a').color, 'blue');
+  store.delete('kh7-modules-v1:user-a');
+  const secondBrowser = create(); secondBrowser.session({ isAdmin: true, userId: 'user-a' }); await flush();
+  assert.equal(card(secondBrowser, 'notes').querySelector('textarea').value, 'Geräteübergreifende Notiz');
+  assert.equal(card(secondBrowser, 'notes').dataset.noteColor, 'blue');
+  cloudError = true;
+  const offlineNote = card(secondBrowser, 'notes').querySelector('textarea'); offlineNote.value = 'Offline-Entwurf'; await offlineNote.emit('input');
+  await new Promise(resolve => setTimeout(resolve, 460)); await flush();
+  assert.match(card(secondBrowser, 'notes').textContent, /Cloud-Speicherung fehlgeschlagen/);
+  assert.equal(persisted().notesPending, true); assert.equal(cloud.get('user-a').content, 'Geräteübergreifende Notiz');
+  cloudError = false;
+  await getButton(card(secondBrowser, 'notes'), 'Synchronisieren').emit('click');
+  await new Promise(resolve => setTimeout(resolve, 460)); await flush();
+  assert.equal(cloud.get('user-a').content, 'Offline-Entwurf'); assert.equal(persisted().notesPending, false);
   console.log('PASS: modules, note persistence, decimal input, portfolio totals, quantity replacement, invalid values, unavailable prices, profiles, duplicate prevention, partial inventory totals, shared currency, hide/restore, logout and account isolation.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
