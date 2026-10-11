@@ -203,18 +203,18 @@
 .bvb-team-name { max-width: 74px; overflow: hidden; text-overflow: ellipsis; }
 
 /* Keep fixture rows readable within the wider BVB rail. */
-.dashboard-right-rail:has([data-module="bvb"]) { width: min(100%, 480px); }
+.dashboard-right-rail:has([data-module="bvb"]) { width: min(100%, 340px); }
 .bvb-matches { overflow-x: visible; }
 .bvb-match { min-width: 0; width: 100%; }
 .bvb-team { flex: 1 1 0; min-width: 0; }
 .bvb-team-name { max-width: none; min-width: 0; }
 .bvb-kickoff, .bvb-versus { flex-shrink: 0; }
 @media (min-width: 1101px) {
-  .dashboard-right-rail:has([data-module="bvb"]) { width: max(400px, min(var(--right-note-width, 280px), max(280px, calc((100vw - 700px) / 2)))); }
-  body:has([data-module="bvb"]) .dashboard-layout { display: block; margin-right: calc(max(400px, min(var(--right-note-width, 280px), max(280px, calc((100vw - 700px) / 2)))) + 34px); }
+  .dashboard-right-rail:has([data-module="bvb"]) { width: max(340px, min(var(--right-note-width, 280px), max(280px, calc((100vw - 700px) / 2)))); }
+  body:has([data-module="bvb"]) .dashboard-layout { display: block; margin-right: calc(max(340px, min(var(--right-note-width, 280px), max(280px, calc((100vw - 700px) / 2)))) + 34px); }
 }
 @media (max-width: 1100px) {
-  .dashboard-right-rail:has([data-module="bvb"]) { width: min(calc(100% - 24px), 480px); }
+  .dashboard-right-rail:has([data-module="bvb"]) { width: min(calc(100% - 24px), 340px); }
 }
 
 .bvb-table .bvb-team { display: flex; gap: 6px; }
