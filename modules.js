@@ -264,11 +264,12 @@
       toggle.setAttribute("aria-expanded", String(!note.collapsed));
       title.textContent = note.collapsed && note.content.trim() ? note.content.trim().split("\n")[0] : `Notiz ${index + 1}`;
     }
-    const remove = button("🗑", () => {
+    const remove = button("", () => {
       if (!window.confirm("Diese Notiz löschen?")) return;
       settings.noteItems = settings.noteItems.filter(item => item.id !== note.id);
       save(true); render();
     });
+    const binIcon = el("span", "", "trash-icon"); binIcon.setAttribute("aria-hidden", "true"); remove.append(binIcon);
     remove.classList.add("note-delete"); remove.title = "Notiz löschen";
     remove.setAttribute("aria-label", "Notiz löschen");
     heading.append(handle, title, toggle, remove); card.append(heading, body); updateCollapsed();
@@ -600,10 +601,14 @@
       if (module.id === "crypto") refreshCrypto();
     });
     item.dataset.addModule = module.id;
+    if (module.id === "cs2") {
+      const row = el("div", undefined, "add-choice-row");
+      list.append(row); row.append(item, inventorySettings);
+    }
   }
-  inventorySettings.className = "add-choice hidden";
-  inventorySettings.replaceChildren(el("strong", "Inventare verwalten"), el("span", "Steam-Profile hinzufügen, bearbeiten und Werte aktualisieren.", "module-muted"));
-  list.append(inventorySettings);
+  inventorySettings.className = "module-button inventory-picker-settings hidden";
+  inventorySettings.textContent = "⚙";
+  inventorySettings.title = "CS2-Inventare verwalten";
   content.append(list); message(content, "Notizen, Farben und Klappzustände werden in deinem Konto gespeichert. Portfolio-Mengen und Profillisten bleiben in diesem Browser."); content.append(button("Fertig", closePicker)); picker.append(backdrop, content); document.body.append(picker);
   function closePicker() { picker.classList.add("hidden"); document.getElementById("add-tile-btn").focus(); }
   window.KH7_OPEN_ADD_MENU = () => {

@@ -120,3 +120,10 @@
 
 .sticky-note .module-heading .module-button:not(.note-drag-handle) { font-size: 1.1rem; min-width: 28px; padding: 3px 5px; }
 .note-delete:hover { background: #b3262633; }
+
+.add-choice-row { display: flex; align-items: stretch; gap: 8px; }
+.add-choice-row .add-choice { flex: 1; min-width: 0; }
+.inventory-picker-settings { flex: 0 0 46px; font-size: 1.35rem; padding: 8px; }
+.trash-icon { display: inline-block; position: relative; width: 12px; height: 14px; margin: 4px 3px 0; border: 1.6px solid currentColor; border-top: 0; border-radius: 0 0 2px 2px; background: linear-gradient(currentColor,currentColor) 3px 3px / 1px 7px no-repeat, linear-gradient(currentColor,currentColor) 7px 3px / 1px 7px no-repeat; }
+.trash-icon::before { content: ""; position: absolute; left: -3px; right: -3px; top: -3px; border-top: 1.6px solid currentColor; }
+.trash-icon::after { content: ""; position: absolute; width: 6px; height: 3px; left: 1.5px; top: -6px; border: 1.6px solid currentColor; border-bottom: 0; border-radius: 2px 2px 0 0; }
