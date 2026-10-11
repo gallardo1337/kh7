@@ -90,7 +90,7 @@
     <button id="lock-btn" class="header-icon-btn" type="button" title="Anmelden" aria-label="Anmelden">🔒</button>
   </div>
 
-  <button class="version-info" id="version-info" type="button">v2.2.0</button>
+  <button class="version-info" id="version-info" type="button">v2.7.0</button>
 
   <div id="login-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="login-title">
     <button class="modal-bg" type="button" data-close-modal aria-label="Schließen"></button>
@@ -171,23 +171,40 @@
       </div>
       <div class="modal-body">
         <div class="changelog-block">
+          <div class="changelog-version"><span>v2.7.0</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">Ein Klick auf das Datum öffnet den Kalender: Monatsansicht, Termine mit optionaler Uhrzeit und Notiz, Bearbeiten sowie Löschen mit Rückgängig-Funktion. Termine werden online im eigenen Konto gespeichert.</div>
+        </div>
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.6.1</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">Datum links neben der Uhr im Format „Sonntag, 11.10.2026“, mit derselben Schriftart und Schriftgröße wie die Uhr. Das Datum aktualisiert sich automatisch.</div>
+        </div>
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.6.0</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">Portfolio-Verlauf für 7, 30 und 90 Tage mit täglicher Online-Speicherung.<br>Steam-Profile zeigen die Wertänderung zum exakt gespeicherten Vortag; ihr Verlauf öffnet in der Inventarverwaltung.<br>Die Historie beginnt mit dem ersten erfolgreichen Abruf und wächst bei geöffnetem KH7. Fehlende Tage werden nicht als Nullwerte gewertet.</div>
+        </div>
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.5.0</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">Krypto-Auflistung als kompakte Liste im Stil der Wettervorhersage, ohne zusätzliche Portfolio-Überschrift. Jeder Coin erhält ein Icon; die Liste ist nach Gesamtwert absteigend sortiert.<br>Portfolio-Einstellungen über das Zahnrad neben „Krypto-Portfolio“ im oberen ＋-Menü.</div>
+        </div>
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.4.0</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">Notizen am unteren Griff in Breite und Höhe skalieren und frei sortieren. Größe und Reihenfolge werden online gespeichert.<br>Pfeiltasten am Verschiebegriff sortieren nach oben/unten; am Größen-Griff ändern sie die Größe.</div>
+        </div>
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.3.0</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">Coins, Mengen, Steam-Profile, Währung und aktivierte Module werden automatisch im Konto gespeichert und beim Anmelden auf anderen Geräten geladen.<br>Bestehende Browserdaten werden einmalig übernommen; neue Dashboarddaten werden nicht lokal gespeichert.</div>
+        </div>
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.2.2</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">Notizen mit +/− zu- und aufklappen und über den Papierkorb oben rechts löschen. Automatisches Speichern ohne dauerhaften Speicherhinweis oder Synchronisieren-Button.<br>Beide Notizspalten beginnen auf derselben Höhe und nutzen die verfügbare Bildschirmhöhe. Die Ablagevorschau bleibt auch rechts im scrollbaren Bereich sichtbar.<br>CS2-Einstellungen über das Zahnrad direkt neben „CS2-Inventare“ im oberen ＋-Menü. Kompakte Verwaltungspanels und Anpassungen für kleinere Bildschirme.</div>
+        </div>
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.2.1</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">Inventaranzeigen zeigen nur Steam-Avatar und Euro-Wert und öffnen den verlinkten SteamAnalyst-Account.<br>SA Price direkt von der SteamAnalyst-Seite, umgerechnet zum EZB-Referenzkurs und zehn Minuten zwischengespeichert. Dateiimport und separate Einzelpreisberechnung entfallen.<br>SteamAnalyst-Inventarlinks, SteamID64 und Steam-Profillinks werden akzeptiert; HTTP-Steam-Links werden auf HTTPS umgestellt.<br>Geschützter Serverabruf über Supabase mit Prüfung der aktiven Admin-Sitzung. Verständliche Fehlerhinweise; vorhandene Werte bleiben bei Fehlern sichtbar.</div>
+        </div>
+        <div class="changelog-block">
           <div class="changelog-version"><span>v2.2.0</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
-          <div class="changelog-details">
-            Über das ＋ oben zwischen Link-Kachel, Notizen, Krypto-Portfolio und CS2-Inventaren wählen.<br>
-            Mehrere farbige Haftnotizen erstellen, mit +/− einzeln zu- und aufklappen und über den Papierkorb oben rechts löschen. Text, Farbe, Klappzustand und Position werden automatisch im Konto gespeichert, ohne dauerhaften Speicherhinweis oder Synchronisieren-Button; bestehende Notizen bleiben erhalten.<br>
-            Haftnotizen per Drag-and-drop links oder rechts neben den Kacheln platzieren und ihre Reihenfolge ändern. Beide Notizspalten beginnen auf derselben Höhe unter dem Kopfbereich und nutzen die verfügbare Bildschirmhöhe. Der Griff unterstützt auch Seitenwechsel per Klick und Pfeiltasten. Die Ablagevorschau bleibt innerhalb der Notizspalten sichtbar, auch rechts im scrollbaren Bereich.<br>
-            Eigene Coins und Mengen eintragen: aktuelle Kraken-Kurse berechnen den Portfolio-Gesamtwert rechts neben dem Wetter. Ein Klick zeigt alle Coins und ihre Werte als kompakte Liste mit Coin-Icons im Stil der Wettervorhersage, nach Gesamtwert absteigend sortiert; Portfolio-Einstellungen sind über das Zahnrad neben „Krypto-Portfolio“ im oberen ＋-Menü erreichbar; EUR und USD sowie Dezimalkomma werden unterstützt.<br>
-            Mehrere CS2-Profile mit eigenen Anzeigen nebeneinander rechts vom Portfolio. Jede Anzeige zeigt nur das Steam-Profilbild und den Euro-Wert, ohne Accountname oder CS2-Beschriftung, und öffnet den passenden SteamAnalyst-Account; Die Profilverwaltung ist über das Zahnrad direkt neben „CS2-Inventare“ im oberen ＋-Menü erreichbar.<br>
-            SteamAnalyst-Inventarlinks, SteamID64 und Steam-Profillinks werden akzeptiert. HTTP-Steam-Links werden automatisch auf HTTPS umgestellt.<br>
-            CS2-Anzeigen übernehmen den SA Price direkt von der verlinkten SteamAnalyst-Seite in EUR zum EZB-Referenzkurs, mit zehn Minuten Zwischenspeicherung. Dateiimport und separate Einzelpreisberechnung entfallen.<br>
-            Geschützter Serverabruf über Supabase mit Prüfung der aktiven Admin-Sitzung. Verständliche Fehlermeldungen bei nicht erreichbaren Datenquellen; vorhandene Inventarwerte bleiben bei Fehlern sichtbar.<br>
-            Notizen am unteren Griff in Breite und Höhe skalieren. Größe und frei gewählte Reihenfolge werden online gespeichert. Pfeiltasten am Verschiebegriff sortieren nach oben/unten, am Größen-Griff ändern sie die Größe.<br>
-            Coins, Mengen, Steam-Profile, Währung und aktivierte Module werden ebenfalls automatisch im Konto gespeichert und beim Anmelden auf anderen Geräten geladen. Bestehende Browserdaten werden einmalig übernommen; neue Dashboarddaten werden nicht lokal gespeichert.<br>
-            Portfolio-Verlauf für 7, 30 und 90 Tage mit täglicher Online-Speicherung. Steam-Profile zeigen die Wertänderung zum exakt gespeicherten Vortag; ihr Verlauf öffnet in der Inventarverwaltung. Die Historie beginnt mit dem ersten erfolgreichen Abruf und wächst bei geöffnetem KH7; fehlende Tage werden nicht als Nullwerte gewertet.<br>
-            Das Datum steht links neben der Uhr im Format „Sonntag, 11.10.2026“ und aktualisiert sich automatisch.<br>
-            Ein Klick auf das Datum öffnet den Kalender: Monatsansicht, Termine mit optionaler Uhrzeit und Notiz, Bearbeiten sowie Löschen mit Rückgängig-Funktion. Termine werden online im eigenen Konto gespeichert.<br>
-            Portfolio und CS2-Verwaltung öffnen als kompakte Panels. Notizen und Module passen sich auch kleineren Bildschirmen an.
-          </div>
+          <div class="changelog-details">Über das ＋ oben zwischen Link-Kachel, Notizen, Krypto-Portfolio und CS2-Inventaren wählen.<br>Mehrere farbige Haftnotizen erstellen und per Drag-and-drop links oder rechts neben den Kacheln platzieren. Text, Farbe, Klappzustand und Position werden automatisch im Konto gespeichert; bestehende Notizen bleiben erhalten. Seitenwechsel auch per Klick und Pfeiltasten am Griff.<br>Eigene Coins und Mengen eintragen: aktuelle Kraken-Kurse berechnen den Portfolio-Gesamtwert rechts neben dem Wetter. EUR, USD und Dezimalkomma werden unterstützt.<br>Mehrere Steam-Profile mit eigenen Inventaranzeigen nebeneinander rechts vom Portfolio.</div>
         </div>
         <div class="changelog-block">
           <div class="changelog-version">v2.1.2</div>
