@@ -1,7 +1,11 @@
-.modules-panel { max-width: var(--container-max-width); margin: 42px auto 70px; text-align: left; padding: 0 16px; }
+.dashboard-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, var(--container-max-width)) minmax(0, 1fr); column-gap: 28px; padding: 0 24px; }
+.dashboard-primary { grid-column: 2; min-width: 0; }
+.dashboard-layout:has(> .modules-panel.hidden) { display: block; max-width: calc(var(--container-max-width) + 48px); margin: 0 auto; }
+.modules-panel { grid-column: 3; width: min(100%, 340px); min-width: 0; margin: 40px 0 70px; text-align: left; align-self: start; }
 .modules-toolbar, .module-heading, .module-price-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .modules-toolbar h2 { font-size: 1.1rem; font-weight: 500; color: #ddd; }
-.modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+.modules-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.modules-toolbar { flex-wrap: wrap; margin-bottom: 14px; }
 .module-card { min-width: 0; background: #202326; border: 1px solid #ffffff17; border-radius: 16px; padding: 20px; }
 .module-heading { margin-bottom: 18px; }
 .module-heading h3 { margin: 0; font-size: 1rem; }
@@ -27,4 +31,31 @@
 .module-card details { margin-top: 16px; } .module-card summary { cursor: pointer; color: #aeb4ba; font-size: .85rem; }
 .module-card .stacked-form { margin-top: 14px; }
 .module-card a { color: #aad6ff; }
+.sticky-note, .note-swatch { --note-paper: #f6e58b; --note-bottom: #edcf67; }
+.sticky-note[data-note-color="pink"], .note-swatch[data-color="pink"] { --note-paper: #f7bfce; --note-bottom: #eda0b7; }
+.sticky-note[data-note-color="blue"], .note-swatch[data-color="blue"] { --note-paper: #b8ddf5; --note-bottom: #94c8eb; }
+.sticky-note[data-note-color="green"], .note-swatch[data-color="green"] { --note-paper: #c7e8a7; --note-bottom: #afd283; }
+.sticky-note[data-note-color="purple"], .note-swatch[data-color="purple"] { --note-paper: #d9c4ef; --note-bottom: #bea4dd; }
+.module-card.sticky-note { position: relative; background: linear-gradient(155deg, var(--note-paper) 75%, var(--note-bottom)); color: #302a25; border: 0; border-radius: 3px 3px 24px 3px; box-shadow: 3px 8px 18px #0005; padding-bottom: 28px; }
+.sticky-note::after { content: ""; position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; background: linear-gradient(135deg, #ffffff65 48%, #00000012 50%); border-radius: 0 0 24px 0; pointer-events: none; }
+.sticky-note .module-heading { margin-bottom: 12px; }
+.sticky-note .module-button { color: #302a25; border-color: #302a2530; background: #ffffff28; }
+.sticky-note .module-muted { color: #4d453f; }
+.module-card.sticky-note textarea { background: transparent; border: 0; border-radius: 0; color: #302a25; padding: 10px 0; min-height: 180px; font-family: "Segoe Print", "Comic Sans MS", cursive; font-size: 1rem; line-height: 1.65; }
+.sticky-note textarea::placeholder { color: #5e554c; }
+.sticky-note textarea:focus-visible { outline: 2px solid #514238; }
+.note-palette { display: flex; gap: 10px; padding: 2px 0 8px; }
+.note-swatch { background: var(--note-paper); width: 25px; height: 25px; padding: 0; border: 1px solid #302a2550; border-radius: 50%; cursor: pointer; }
+.note-swatch[aria-pressed="true"] { outline: 2px solid #514238; outline-offset: 2px; }
+.note-swatch:focus-visible { outline: 3px solid #302a25; outline-offset: 3px; }
+@media (max-width: 1750px) {
+  .dashboard-layout { max-width: 1420px; margin: 0 auto; grid-template-columns: minmax(0, 1fr) 320px; }
+  .dashboard-primary { grid-column: 1; }
+  .modules-panel { grid-column: 2; }
+}
+@media (max-width: 1100px) {
+  .dashboard-layout { max-width: var(--container-max-width); display: block; padding: 0 16px; }
+  .modules-panel { width: 100%; margin-top: 42px; }
+  .modules-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+}
 @media (max-width: 480px) { .modules-toolbar { align-items: flex-start; } .modules-toolbar h2 { white-space: nowrap; } .module-card { padding: 16px; } }

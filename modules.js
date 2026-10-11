@@ -19,8 +19,9 @@
   const prices = new Map();
   const inventories = new Map();
   let cryptoTime = null;
+  const noteColors = [["yellow", "Gelb"], ["pink", "Rosa"], ["blue", "Blau"], ["green", "Grün"], ["purple", "Lila"]];
 
-  function defaults() { return { enabled: [], notes: "", currency: "EUR", holdings: [], profiles: [], valuation: "steam" }; }
+  function defaults() { return { enabled: [], notes: "", noteColor: "yellow", currency: "EUR", holdings: [], profiles: [], valuation: "steam" }; }
   function el(tag, text, className) {
     const node = document.createElement(tag);
     if (text !== undefined) node.textContent = text;
@@ -48,6 +49,7 @@
       return {
         enabled: [...new Set(Array.isArray(data.enabled) ? data.enabled.filter(id => catalog.some(item => item.id === id)) : [])],
         notes: typeof data.notes === "string" ? data.notes.slice(0, 20000) : "",
+        noteColor: noteColors.some(([key]) => key === data.noteColor) ? data.noteColor : "yellow",
         currency: ["EUR", "USD"].includes(data.currency) ? data.currency : "EUR",
         holdings: Array.isArray(data.holdings) ? data.holdings.filter(h => h && /^[A-Z0-9]{1,15}$/.test(h.symbol) && Number.isFinite(h.amount) && h.amount > 0).slice(0, 30) : [],
         profiles: Array.isArray(data.profiles) ? data.profiles.filter(p => p && typeof p.label === "string" && validProfile(p.profile)).slice(0, 10) : [],
@@ -108,6 +110,25 @@
     }
   }
   function renderNotes(card) {
+    card.classList.add("sticky-note");
+    card.dataset.noteColor = settings.noteColor;
+    const palette = el("div", undefined, "note-palette");
+    palette.setAttribute("role", "group");
+    palette.setAttribute("aria-label", "Notizfarbe");
+    for (const [color, name] of noteColors) {
+      const swatch = button("", () => {
+        settings.noteColor = color;
+        card.dataset.noteColor = color;
+        palette.querySelectorAll("button").forEach(item => item.setAttribute("aria-pressed", String(item.dataset.color === color)));
+        save();
+      });
+      swatch.className = "note-swatch";
+      swatch.dataset.color = color;
+      swatch.title = name;
+      swatch.setAttribute("aria-label", `Notizfarbe ${name}`);
+      swatch.setAttribute("aria-pressed", String(settings.noteColor === color));
+      palette.append(swatch);
+    }
     const input = el("textarea");
     input.setAttribute("aria-label", "Meine Notizen");
     input.placeholder = "Was möchtest du festhalten?";
@@ -119,7 +140,7 @@
       settings.notes = input.value;
       status.textContent = save() ? "Gespeichert · nur in diesem Browser" : "Nicht gespeichert – bitte Text sichern.";
     });
-    card.append(input, status);
+    card.append(palette, input, status);
   }
   function field(form, label, input) {
     const wrapper = el("label", label);

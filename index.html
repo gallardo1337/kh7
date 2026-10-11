@@ -24,7 +24,8 @@
     <img src="images/logo_transparent.png" alt="KH7" class="logo" id="logo">
   </header>
 
-  <main>
+  <main class="dashboard-layout">
+    <div class="dashboard-primary">
     <form action="https://www.google.de/search" method="get" class="search-form" id="search-form" accept-charset="UTF-8">
       <input type="hidden" name="hl" value="de">
       <div class="search-wrapper">
@@ -61,11 +62,12 @@
 
     <p id="tiles-status" class="tiles-status hidden"></p>
     <section class="tiles hidden" id="tiles" aria-live="polite" aria-label="Favoriten"></section>
-    <section id="modules-panel" class="modules-panel hidden" aria-label="Meine Module">
+    </div>
+    <aside id="modules-panel" class="modules-panel hidden" aria-label="Meine Module">
       <div class="modules-toolbar"><h2>Meine Module</h2><button id="modules-manage" type="button" class="module-button">＋ Module hinzufügen</button></div>
       <p id="modules-empty" class="module-muted">Ergänze dein Dashboard mit Notizen, Krypto-Kursen oder deinem CS2-Inventar.</p>
       <div id="modules-grid" class="modules-grid"></div>
-    </section>
+    </aside>
   </main>
 
   <div id="lock-container">
