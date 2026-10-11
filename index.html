@@ -20,9 +20,15 @@
     <span class="weather-placeholder">--°C</span>
   </button>
   <button id="portfolio-info" class="portfolio-info hidden" type="button" aria-expanded="false" aria-controls="portfolio-panel" aria-label="Krypto-Portfolio aufklappen">Portfolio —</button>
+  <div id="inventory-info" class="inventory-info hidden" aria-label="CS2-Inventar">
+    <select id="inventory-account" aria-label="Steam-Account auswählen"></select>
+    <a id="inventory-value" class="portfolio-info" target="_blank" rel="noopener noreferrer">CS2 —</a>
+    <button id="inventory-settings" class="portfolio-info" type="button" aria-label="CS2-Profile verwalten" aria-expanded="false" aria-controls="inventory-panel">⚙</button>
+  </div>
   </div>
   <div id="weather-panel" class="weather-panel hidden" aria-live="polite"></div>
   <div id="portfolio-panel" class="portfolio-panel hidden" aria-label="Mein Krypto-Portfolio"></div>
+  <div id="inventory-panel" class="portfolio-panel inventory-panel hidden" aria-label="Meine CS2-Inventare"></div>
   <aside id="notes-dock" class="notes-dock hidden" aria-label="Meine Haftnotizen"></aside>
 
   <header>

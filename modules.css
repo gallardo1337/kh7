@@ -39,6 +39,11 @@
 .dashboard-status-row .weather-info { position: static; flex-shrink: 0; }
 .portfolio-info { background: #141414b3; border: 0; border-radius: 20px; padding: 6px 14px; font: 1rem monospace; color: #eee; cursor: pointer; white-space: nowrap; }
 .portfolio-info:focus-visible { outline: 2px solid #85dcaa; }
+.inventory-info { display: flex; align-items: center; gap: 5px; }
+.inventory-info a { text-decoration: none; }
+.inventory-info a:not([href]) { cursor: pointer; }
+.inventory-info select { background: #252525; color: #eee; border: 1px solid #ffffff26; border-radius: 12px; padding: 5px; max-width: 120px; }
+.inventory-panel { left: 270px; }
 .portfolio-panel { position: fixed; top: 62px; left: 128px; width: 360px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 90px); overflow-y: auto; z-index: 1001; text-align: left; box-shadow: 0 12px 35px #0008; border-radius: 16px; }
 .notes-dock { position: fixed; top: 78px; left: 18px; width: 280px; max-height: calc(100dvh - 105px); overflow-y: auto; z-index: 10; text-align: left; padding: 0 8px 20px 0; }
 @media (min-width: 1101px) and (max-width: 1750px) {
@@ -51,6 +56,8 @@
   .dashboard-status-row { top: 14px; left: 12px; max-width: calc(100vw - 100px); gap: 6px; flex-wrap: wrap; }
   .portfolio-info { font-size: .85rem; padding: 6px 10px; }
   .portfolio-panel { left: 12px; top: 88px; max-height: calc(100dvh - 110px); }
+  .inventory-info { flex-wrap: wrap; }
+  .inventory-panel { top: 124px; max-height: calc(100dvh - 146px); }
 }
 .sticky-note, .note-swatch { --note-paper: #f6e58b; --note-bottom: #edcf67; }
 .sticky-note[data-note-color="pink"], .note-swatch[data-color="pink"] { --note-paper: #f7bfce; --note-bottom: #eda0b7; }

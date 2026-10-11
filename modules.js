@@ -15,6 +15,12 @@
   let draggedNoteId = null;
   const portfolioButton = document.getElementById("portfolio-info");
   const portfolioPanel = document.getElementById("portfolio-panel");
+  const inventoryInfo = document.getElementById("inventory-info");
+  const inventoryAccount = document.getElementById("inventory-account");
+  const inventoryValue = document.getElementById("inventory-value");
+  const inventorySettings = document.getElementById("inventory-settings");
+  const inventoryPanel = document.getElementById("inventory-panel");
+  let inventoryOpen = false;
   let portfolioOpen = false;
   let sessionEpoch = 0;
   let cloudReady = false;
@@ -131,6 +137,7 @@
         holdings: Array.isArray(data.holdings) ? data.holdings.filter(h => h && /^[A-Z0-9]{1,15}$/.test(h.symbol) && Number.isFinite(h.amount) && h.amount > 0).slice(0, 30) : [],
         profiles: Array.isArray(data.profiles) ? data.profiles.filter(p => p && typeof p.label === "string" && validProfile(p.profile)).slice(0, 10) : [],
         valuation: data.valuation === "cash" ? "cash" : "steam",
+        activeCSProfile: typeof data.activeCSProfile === "string" ? data.activeCSProfile : "",
       };
     } catch { showToast("Module konnten nicht aus dem Browser geladen werden.", "error"); return defaults(); }
   }
@@ -161,6 +168,7 @@
     cloudReady = false; noteDirty = false; noteRevision = 0;
     noteStatus = "Notiz wird aus deinem Konto geladen …";
     portfolioOpen = false;
+    inventoryOpen = false;
     generation++;
     cancelRequests();
     userId = nextId;
@@ -176,14 +184,15 @@
   }
   function render() {
     grid.replaceChildren();
-    notesDock.replaceChildren(); rightNotesDock.replaceChildren(); portfolioPanel.replaceChildren();
+    notesDock.replaceChildren(); rightNotesDock.replaceChildren(); portfolioPanel.replaceChildren(); inventoryPanel.replaceChildren();
     const showNotes = Boolean(userId && settings.enabled.includes("notes"));
     const showPortfolio = Boolean(userId && settings.enabled.includes("crypto"));
-    panel.classList.toggle("hidden", !userId || !settings.enabled.includes("cs2"));
+    panel.classList.add("hidden");
     notesDock.classList.toggle("hidden", !showNotes || !settings.noteItems.some(note => note.side !== "right"));
     const showRightNotes = showNotes && settings.noteItems.some(note => note.side === "right");
     rightNotesDock.classList.toggle("hidden", !showRightNotes);
-    rightRail.classList.toggle("hidden", !showRightNotes && (!userId || !settings.enabled.includes("cs2")));
+    rightRail.classList.toggle("hidden", !showRightNotes);
+    renderInventoryHeader();
     portfolioButton.classList.toggle("hidden", !showPortfolio);
     portfolioPanel.classList.toggle("hidden", !showPortfolio || !portfolioOpen);
     portfolioButton.setAttribute("aria-expanded", String(showPortfolio && portfolioOpen));
@@ -212,7 +221,7 @@
       }));
       card.append(heading);
       module.render(card);
-      (id === "notes" ? notesDock : id === "crypto" ? portfolioPanel : grid).append(card);
+      (id === "notes" ? notesDock : id === "crypto" ? portfolioPanel : inventoryPanel).append(card);
     }
   }
   function renderNotes(card, note, index) {
@@ -430,6 +439,30 @@
   function validProfile(profile) {
     return typeof profile === "string" && (/^765\d{14}$/.test(profile) || /^https:\/\/steamcommunity\.com\/(?:profiles\/765\d{14}|id\/[A-Za-z0-9_-]{1,80})\/?$/.test(profile));
   }
+  function steamAnalystURL(profile) {
+    const id = profile?.replace(/^https:\/\/steamcommunity\.com\/profiles\//, "").replace(/\/$/, "");
+    return /^765\d{14}$/.test(id || "") ? `https://www.steamanalyst.com/inventory/${id}` : null;
+  }
+  function renderInventoryHeader() {
+    const visible = Boolean(userId && settings.enabled.includes("cs2"));
+    inventoryInfo.classList.toggle("hidden", !visible);
+    inventoryPanel.classList.toggle("hidden", !visible || !inventoryOpen);
+    inventorySettings.setAttribute("aria-expanded", String(visible && inventoryOpen));
+    inventoryAccount.replaceChildren();
+    for (const profile of settings.profiles) {
+      const option = el("option", profile.label); option.value = profile.profile; inventoryAccount.append(option);
+    }
+    const active = settings.profiles.find(profile => profile.profile === settings.activeCSProfile) || settings.profiles[0];
+    inventoryAccount.value = active?.profile || "";
+    inventoryAccount.classList.toggle("hidden", settings.profiles.length < 2);
+    const result = active && inventories.get(active.profile);
+    inventoryValue.textContent = `CS2 ${result ? (result.unpricedCount ? "≈ " : "") + money(result.total) : "—"}`;
+    const href = active && steamAnalystURL(active.profile);
+    if (href) inventoryValue.setAttribute("href", href);
+    else inventoryValue.removeAttribute("href");
+    inventoryValue.setAttribute("aria-label", active ? `${active.label}: ${result ? money(result.total) : "Wert noch nicht verfügbar"}. ${href ? "Auf SteamAnalyst öffnen" : "SteamID64 in der Profilverwaltung eintragen"}` : "Steam-Account hinzufügen");
+    inventoryValue.title = active ? `${active.label} · ${result ? "Schätzung von SteamWebAPI" : "Automatische Bewertung noch nicht eingerichtet"}` : "Steam-Account hinzufügen";
+  }
   function renderCS2(card) {
     const currency = choice([["EUR", "Euro (€)"], ["USD", "US-Dollar ($)"]], settings.currency);
     currency.setAttribute("aria-label", "Inventar-Währung");
@@ -448,6 +481,9 @@
       const row = el("div", undefined, "module-price-row");
       const description = el("div"); description.append(el("strong", profile.label));
       const link = el("a", "Steam-Profil"); link.href = profile.profile.startsWith("https:") ? profile.profile : `https://steamcommunity.com/profiles/${profile.profile}`; link.target = "_blank"; link.rel = "noopener noreferrer"; description.append(el("br"), link);
+      const analystURL = steamAnalystURL(profile.profile);
+      if (analystURL) { const analyst = el("a", "SteamAnalyst öffnen"); analyst.href = analystURL; analyst.target = "_blank"; analyst.rel = "noopener noreferrer"; description.append(el("br"), analyst); }
+      else message(description, "Für den SteamAnalyst-Direktlink dieses Profil durch seine SteamID64 ersetzen.");
       const result = inventories.get(profile.profile);
       const value = el("div"); value.append(el("strong", result ? money(result.total) : "Noch nicht geladen"));
       if (result) message(value, `${result.itemCount} Items · ${result.unpricedCount} ohne Preis · abgerufen ${new Date(result.updatedAt).toLocaleString("de-DE")}`);
@@ -459,7 +495,7 @@
     const form = el("form", undefined, "stacked-form");
     const label = field(form, "Profilname", input("z. B. Hauptaccount", 40));
     const profile = field(form, "Steam-Profillink oder SteamID64", input("https://steamcommunity.com/id/…", 160));
-    const status = message(form, "Bis zu 10 Profile. Das Inventar muss öffentlich sein.");
+    const status = message(form, "Bis zu 10 Profile. Für den SteamAnalyst-Direktlink SteamID64 oder /profiles/-Link eintragen. Das Inventar muss öffentlich sein.");
     const submit = el("button", "Profil hinzufügen", "module-button"); submit.type = "submit"; form.append(submit);
     form.addEventListener("submit", event => {
       event.preventDefault();
@@ -503,7 +539,7 @@
     finally {
       if (current === generation) {
         inventoryBusy = false; render();
-        const status = grid.querySelector("[data-inventory-status]");
+        const status = inventoryPanel.querySelector("[data-inventory-status]");
         if (status) status.textContent = `${success} Profile aktualisiert.` + (errors.length ? ` ${errors.join(" ")} Fehlende Profile werden nicht mitgerechnet.` : " Quelle: SteamWebAPI.");
       }
     }
@@ -534,6 +570,7 @@
       if (module.id === "notes") settings.noteItems.push({ id: newNoteId(), content: "", color: "yellow", collapsed: false });
       save(module.id === "notes");
       if (module.id === "crypto") portfolioOpen = true;
+      if (module.id === "cs2") inventoryOpen = true;
       render(); closePicker();
       if (module.id === "crypto") refreshCrypto();
     });
@@ -559,7 +596,18 @@
     }
   });
   window.addEventListener("kh7-session", event => setSession(event.detail));
+  inventoryAccount.addEventListener("change", () => { settings.activeCSProfile = inventoryAccount.value; save(); renderInventoryHeader(); });
+  inventoryValue.addEventListener("click", event => {
+    const active = settings.profiles.find(profile => profile.profile === inventoryAccount.value);
+    if (!active || !steamAnalystURL(active.profile)) { event.preventDefault(); inventoryOpen = true; render(); }
+  });
+  inventorySettings.addEventListener("click", () => {
+    inventoryOpen = !inventoryOpen;
+    if (inventoryOpen) { portfolioOpen = false; portfolioPanel.classList.add("hidden"); portfolioButton.setAttribute("aria-expanded", "false"); document.getElementById("weather-panel")?.classList.add("hidden"); document.getElementById("weather-info")?.setAttribute("aria-expanded", "false"); }
+    inventoryPanel.classList.toggle("hidden", !inventoryOpen); inventorySettings.setAttribute("aria-expanded", String(inventoryOpen));
+  });
   portfolioButton.addEventListener("click", () => {
+    inventoryOpen = false; inventoryPanel.classList.add("hidden"); inventorySettings.setAttribute("aria-expanded", "false");
     portfolioOpen = !portfolioOpen;
     portfolioPanel.classList.toggle("hidden", !portfolioOpen);
     portfolioButton.setAttribute("aria-expanded", String(portfolioOpen));
@@ -569,9 +617,11 @@
     }
   });
   document.getElementById("weather-info")?.addEventListener("click", () => {
+    inventoryOpen = false; inventoryPanel.classList.add("hidden"); inventorySettings.setAttribute("aria-expanded", "false");
     portfolioOpen = false; portfolioPanel.classList.add("hidden"); portfolioButton.setAttribute("aria-expanded", "false");
   });
   document.addEventListener?.("keydown", event => {
+    if (event.key === "Escape") { inventoryOpen = false; inventoryPanel.classList.add("hidden"); inventorySettings.setAttribute("aria-expanded", "false"); }
     if (event.key === "Escape") { portfolioOpen = false; portfolioPanel.classList.add("hidden"); portfolioButton.setAttribute("aria-expanded", "false"); }
   });
   if (typeof state !== "undefined") setSession({ isAdmin: state.isAdmin, userId: state.user?.id });

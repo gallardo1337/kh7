@@ -10,6 +10,7 @@ class Node {
   get textContent() { return this._text + this.children.map(n => n.textContent).join(''); }
   append(...nodes) { nodes.forEach(n => { n.parent = this; this.children.push(n); }); }
   replaceChildren(...nodes) { this.children = []; this._text = ''; this.append(...nodes); }
+  removeAttribute(name) { delete this.attrs[name]; }
   setAttribute(name, value) { this.attrs[name] = value; }
   addEventListener(name, fn) { (this.listeners[name] ||= []).push(fn); }
   async emit(name, props = {}) { for (const fn of this.listeners[name] || []) await fn({ target: this, preventDefault() {}, ...props }); }
@@ -33,7 +34,7 @@ let failProfile = false;
 let csrfCalls = 0;
 const markets = { XXBTZEUR: { wsname: 'XBT/EUR', altname: 'XBTEUR' }, XETHZEUR: { wsname: 'ETH/EUR', altname: 'ETHEUR' }, XXBTZUSD: { wsname: 'XBT/USD', altname: 'XBTUSD' } };
 function create() {
-  const ids = Object.fromEntries(['modules-panel', 'modules-grid', 'modules-empty', 'add-tile-btn', 'notes-dock', 'notes-dock-right', 'dashboard-right-rail', 'portfolio-info', 'portfolio-panel'].map(id => [id, new Node('div')]));
+  const ids = Object.fromEntries(['modules-panel', 'modules-grid', 'modules-empty', 'add-tile-btn', 'notes-dock', 'notes-dock-right', 'dashboard-right-rail', 'portfolio-info', 'portfolio-panel', 'inventory-info', 'inventory-account', 'inventory-value', 'inventory-settings', 'inventory-panel'].map(id => [id, new Node('div')]));
   ids['modules-panel'].className = 'hidden';
   const document = { body: new Node('body'), getElementById: id => ids[id], createElement: tag => new Node(tag), hidden: false };
   const events = {};
@@ -70,7 +71,7 @@ function create() {
   return { ids, document, alerts, openMenu: () => context.window.KH7_OPEN_ADD_MENU(), tileDialogs: () => tileDialogs, session: detail => events['kh7-session']({ detail }), grid: ids['modules-grid'], picker: document.body.children[0] };
 }
 const flush = async () => { for (let n = 0; n < 12; n++) await Promise.resolve(); };
-const card = (app, id) => [...app.grid.children, ...app.ids['notes-dock'].children, ...app.ids['notes-dock-right'].children, ...app.ids['portfolio-panel'].children].find(c => c.dataset.module === id);
+const card = (app, id) => [...app.grid.children, ...app.ids['notes-dock'].children, ...app.ids['notes-dock-right'].children, ...app.ids['portfolio-panel'].children, ...app.ids['inventory-panel'].children].find(c => c.dataset.module === id);
 const getButton = (parent, text) => parent.querySelectorAll('button').find(b => b.textContent === text);
 const enable = async (app, id) => { app.openMenu(); const item = app.picker.querySelectorAll('button').find(n => n.dataset.addModule === id); await item.emit('click'); await flush(); };
 const addCoin = async (app, symbol, amount) => {
@@ -130,15 +131,26 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   assert.match(card(app, 'crypto').textContent, /Letzte Kurse bleiben sichtbar/);
   assert.match(card(app, 'crypto').textContent, /14\.000,00/); failCrypto = false;
   await enable(app, 'cs2');
-  assert(!app.ids['modules-panel'].classList.contains('hidden'));
+  assert(!app.ids['inventory-info'].classList.contains('hidden'));
+  assert(!app.ids['inventory-panel'].classList.contains('hidden'));
   await addProfile(app, 'Hauptaccount', 'https://steamcommunity.com/profiles/76500000000000001');
   await addProfile(app, 'Lager', '76500000000000002');
+  assert.equal(app.ids['inventory-value'].attrs.href, 'https://www.steamanalyst.com/inventory/76500000000000001');
+  assert.equal(app.ids['inventory-value'].textContent, 'CS2 —');
+  assert(!app.ids['inventory-account'].classList.contains('hidden'));
   await addProfile(app, 'Duplikat', '76500000000000001'); assert.equal(persisted().profiles.length, 2);
   await addProfile(app, 'Unsicher', 'javascript:alert(1)'); assert.equal(persisted().profiles.length, 2);
   failProfile = true; await getButton(card(app, 'cs2'), 'Inventarwerte aktualisieren').emit('click');
   assert.match(card(app, 'cs2').textContent, /50,00/); assert.match(card(app, 'cs2').textContent, /Inventar privat/); assert.match(card(app, 'cs2').textContent, /Teilwert/);
   failProfile = false; await getButton(card(app, 'cs2'), 'Inventarwerte aktualisieren').emit('click');
   assert.match(card(app, 'cs2').textContent, /125,00/); assert.match(card(app, 'cs2').textContent, /1 ohne Preis/);
+  assert.match(app.ids['inventory-value'].textContent, /≈ 50,00/);
+  app.ids['inventory-account'].value = '76500000000000002'; await app.ids['inventory-account'].emit('change');
+  assert.equal(app.ids['inventory-value'].attrs.href, 'https://www.steamanalyst.com/inventory/76500000000000002');
+  assert.match(app.ids['inventory-value'].textContent, /75,00/);
+  assert.equal(persisted().activeCSProfile, '76500000000000002');
+  await app.ids['inventory-settings'].emit('click'); assert(app.ids['inventory-panel'].classList.contains('hidden'));
+  await app.ids['inventory-settings'].emit('click'); assert(!app.ids['inventory-panel'].classList.contains('hidden'));
   assert.equal(csrfCalls, 4);
   const currency = card(app, 'cs2').querySelectorAll('select')[0]; currency.value = 'USD'; await currency.emit('change'); await flush();
   assert.equal(persisted().currency, 'USD'); assert.match(card(app, 'cs2').textContent, /Noch nicht geladen/);
@@ -149,6 +161,8 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   assert.equal(card(app, 'notes').dataset.noteColor, 'pink');
   app.session({ isAdmin: false, userId: null }); assert.equal(app.grid.children.length, 0); assert(app.ids['modules-panel'].classList.contains('hidden'));
   assert.equal(app.ids['notes-dock'].children.length, 0); assert.equal(app.ids['portfolio-panel'].children.length, 0);
+  assert(app.ids['inventory-info'].classList.contains('hidden')); assert(app.ids['inventory-panel'].classList.contains('hidden'));
+  assert.equal(app.ids['inventory-value'].attrs.href, undefined);
   app.session({ isAdmin: true, userId: 'user-b' }); assert.equal(app.grid.children.length, 0);
   app.session({ isAdmin: true, userId: 'user-a' }); assert.equal(card(app, 'notes').querySelector('textarea').value, before);
   const restored = create(); restored.session({ isAdmin: true, userId: 'user-a' }); assert.equal(card(restored, 'notes').querySelector('textarea').value, before);
