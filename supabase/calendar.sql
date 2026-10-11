@@ -1,6 +1,7 @@
 create table public.calendar_events (
  id uuid primary key default gen_random_uuid(),
  user_id uuid not null references auth.users(id) on delete cascade,
+ is_birthday boolean not null default false,
  title text not null check (char_length(title) between 1 and 120),
  event_date date not null,
  event_time time,

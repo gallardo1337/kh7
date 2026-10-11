@@ -90,7 +90,7 @@
     <button id="lock-btn" class="header-icon-btn" type="button" title="Anmelden" aria-label="Anmelden">🔒</button>
   </div>
 
-  <button class="version-info" id="version-info" type="button">v2.7.0</button>
+  <button class="version-info" id="version-info" type="button">v2.8.0</button>
 
   <div id="login-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="login-title">
     <button class="modal-bg" type="button" data-close-modal aria-label="Schließen"></button>
@@ -152,8 +152,10 @@
       <div class="calendar-layout"><section><div id="calendar-weekdays" class="calendar-grid calendar-weekdays" aria-hidden="true"></div><div id="calendar-days" class="calendar-grid" aria-label="Kalendertage"></div></section>
       <section class="calendar-agenda"><h3 id="calendar-selected"></h3><div id="calendar-events"></div>
         <form id="calendar-form" class="stacked-form">
+          <label><input id="calendar-event-birthday" type="checkbox"> Geburtstag (jährlich wiederholen)</label>
           <label>Titel<input id="calendar-event-title" required maxlength="120" placeholder="Was steht an?"></label>
-          <div class="calendar-form-row"><label>Datum<input id="calendar-event-date" type="date" required></label><label>Uhrzeit (optional)<input id="calendar-event-time" type="time"></label></div>
+          <div class="calendar-form-row"><label><span id="calendar-date-label">Datum</span><input id="calendar-event-date" type="date" required></label><label>Uhrzeit (optional)<input id="calendar-event-time" type="time"></label></div>
+          <p id="calendar-birthday-hint" class="module-muted hidden">Für Geburtstage das Geburtsdatum eintragen. Am 29. Februar geboren? In anderen Jahren erscheint der Geburtstag am 28. Februar.</p>
           <label>Notiz (optional)<textarea id="calendar-event-description" maxlength="2000" rows="3"></textarea></label>
           <div class="calendar-form-row"><button id="calendar-save" class="module-button" type="submit">Termin speichern</button><button id="calendar-new" class="module-button" type="button">Neuer Termin</button></div>
         </form>
@@ -170,6 +172,10 @@
         <button type="button" class="close-btn" data-close-modal aria-label="Schließen">&times;</button>
       </div>
       <div class="modal-body">
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.8.0</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">Geburtstage im Kalender jährlich wiederholen, mit Geburtstags-Symbol und Alter. Online gespeichert und auf anderen Geräten verfügbar. Geburtstage am 29. Februar erscheinen in Nicht-Schaltjahren am 28. Februar.</div>
+        </div>
         <div class="changelog-block">
           <div class="changelog-version"><span>v2.7.0</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
           <div class="changelog-details">Ein Klick auf das Datum öffnet den Kalender: Monatsansicht, Termine mit optionaler Uhrzeit und Notiz, Bearbeiten sowie Löschen mit Rückgängig-Funktion. Termine werden online im eigenen Konto gespeichert.</div>

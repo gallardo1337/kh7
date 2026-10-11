@@ -180,3 +180,5 @@
 .inventory-history { margin: 8px 0 16px; font-size: .85rem; }
 .inventory-history summary { cursor: pointer; }
 .portfolio-panel.portfolio-summary:has(.value-history) { width: 320px; }
+
+#calendar-event-birthday { width: auto; margin-right: .5rem; accent-color: #80ff00; }
