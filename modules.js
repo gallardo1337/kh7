@@ -56,11 +56,13 @@
   function message(parent, text) { const node = el("p", text, "module-muted"); parent.append(node); return node; }
   function money(value) { return new Intl.NumberFormat("de-DE", { style: "currency", currency: settings.currency }).format(value); }
   function storageKey() { return `kh7-modules-v1:${userId}`; }
-  function save(syncNote = false) {
+  function save() {
     if (!userId) return false;
-    if (syncNote) { noteRevision++; noteDirty = true; queueNoteSave(); }
-    try { localStorage.setItem(storageKey(), JSON.stringify({ ...settings, notesPending: noteDirty })); return true; }
-    catch { showToast("Speichern im Browser nicht möglich. Bitte deine Eingaben sichern.", "error"); return false; }
+    noteRevision++; noteDirty = true; queueNoteSave();
+    return true;
+  }
+  function clearLegacyStorage() {
+    try { localStorage.removeItem(storageKey()); } catch { /* Migration cleanup can retry next sign-in. */ }
   }
   function updateNoteStatus(text) {
     noteStatus = text;
@@ -77,15 +79,15 @@
     const epoch = sessionEpoch;
     const revision = noteRevision;
     const client = state.client;
-    const payload = { user_id: userId, content: settings.noteItems[0]?.content || "", color: settings.noteItems[0]?.color || "yellow", note_items: settings.noteItems.map(note => ({ ...note })), enabled: settings.enabled.includes("notes"), updated_at: new Date().toISOString() };
+    const payload = { user_id: userId, content: settings.noteItems[0]?.content || "", color: settings.noteItems[0]?.color || "yellow", note_items: settings.noteItems.map(note => ({ ...note })), enabled: settings.enabled.includes("notes"), module_settings: { enabled: [...settings.enabled], currency: settings.currency, holdings: settings.holdings.map(item => ({ ...item })), profiles: settings.profiles.map(item => ({ ...item })), valuation: settings.valuation, activeCSProfile: settings.activeCSProfile || "" }, updated_at: new Date().toISOString() };
     cloudWrites = cloudWrites.catch(() => {}).then(async () => {
       if (epoch !== sessionEpoch) return;
       try {
         const result = await client.from("dashboard_notes").upsert(payload, { onConflict: "user_id" });
         if (result.error) throw result.error;
-        if (epoch === sessionEpoch && revision === noteRevision) { noteDirty = false; save(); updateNoteStatus("In deinem Konto gespeichert"); }
+        if (epoch === sessionEpoch && revision === noteRevision) { noteDirty = false; clearLegacyStorage(); updateNoteStatus("In deinem Konto gespeichert"); }
       } catch {
-        if (epoch === sessionEpoch) updateNoteStatus("Cloud-Speicherung fehlgeschlagen · Eingabe bleibt als Browser-Sicherung erhalten.");
+        if (epoch === sessionEpoch) { updateNoteStatus("Cloud-Speicherung fehlgeschlagen · Änderungen sind noch nicht online gespeichert. Bitte diese Seite offen lassen."); showToast("Dashboard konnte nicht online gespeichert werden. Bitte die Seite offen lassen; der Abruf wird automatisch wiederholt.", "error"); }
       }
     });
   }
@@ -93,23 +95,30 @@
     const epoch = sessionEpoch;
     const revision = noteRevision;
     try {
-      const result = await state.client.from("dashboard_notes").select("content,color,enabled,note_items").eq("user_id", userId).maybeSingle();
+      const result = await state.client.from("dashboard_notes").select("content,color,enabled,note_items,module_settings").eq("user_id", userId).maybeSingle();
       if (epoch !== sessionEpoch) return;
       if (result.error) throw result.error;
       cloudReady = true;
-      if (revision === noteRevision && !noteDirty && result.data) {
-        settings.noteItems = normalizeNotes(result.data);
-        settings.notes = result.data.content;
-        settings.noteColor = noteColors.some(([color]) => color === result.data.color) ? result.data.color : "yellow";
-        settings.enabled = settings.enabled.filter(id => id !== "notes");
-        if (result.data.enabled) settings.enabled.push("notes");
-        noteDirty = false;
-        save(); updateNoteStatus("Aus deinem Konto geladen"); render();
-      } else if (noteDirty || settings.noteItems.length || settings.enabled.includes("notes")) {
-        noteDirty = true; queueNoteSave();
-      } else updateNoteStatus("Wird automatisch in deinem Konto gespeichert");
+      if (revision === noteRevision) {
+        if (result.data?.module_settings) {
+          // The online account is authoritative after the one-time migration.
+          settings = normalizeSettings({ ...result.data.module_settings, noteItems: result.data.note_items });
+          noteDirty = false; clearLegacyStorage();
+        } else {
+          // Keep legacy browser portfolio/profile data and existing online notes.
+          if (result.data && !settings.notesPending) {
+            settings.noteItems = normalizeNotes(result.data);
+            settings.enabled = settings.enabled.filter(id => id !== "notes");
+            if (result.data.enabled) settings.enabled.push("notes");
+          }
+          noteDirty = true; queueNoteSave();
+        }
+        updateNoteStatus("Aus deinem Konto geladen"); render();
+        if (settings.enabled.includes("crypto") && settings.holdings.length) refreshCrypto();
+        if (settings.enabled.includes("cs2") && settings.profiles.length) refreshInventories();
+      } else if (noteDirty) queueNoteSave();
     } catch {
-      if (epoch === sessionEpoch) updateNoteStatus("Cloud nicht erreichbar · bitte später erneut versuchen.");
+      if (epoch === sessionEpoch) { updateNoteStatus("Cloud nicht erreichbar · bitte später erneut versuchen."); showToast("Dashboard konnte nicht aus deinem Konto geladen werden. Automatischer Neuversuch folgt.", "error"); }
     }
   }
   function newNoteId() { return window.crypto?.randomUUID?.() || `note-${Date.now()}-${Math.random().toString(36).slice(2)}`; }
@@ -122,11 +131,9 @@
       return { id, content: typeof note.content === "string" ? note.content.slice(0, 20000) : "", color: noteColors.some(([key]) => key === note.color) ? note.color : "yellow", collapsed: note.collapsed === true, side: note.side === "right" ? "right" : "left" };
     });
   }
-  function load() {
-    try {
-      const data = JSON.parse(localStorage.getItem(storageKey()) || "null");
-      if (!data || typeof data !== "object") return defaults();
-      return {
+  function normalizeSettings(data) {
+    if (!data || typeof data !== "object") return defaults();
+    return {
         enabled: [...new Set(Array.isArray(data.enabled) ? data.enabled.filter(id => catalog.some(item => item.id === id)) : [])],
         notes: typeof data.notes === "string" ? data.notes.slice(0, 20000) : "",
         noteColor: noteColors.some(([key]) => key === data.noteColor) ? data.noteColor : "yellow",
@@ -138,7 +145,11 @@
         valuation: data.valuation === "cash" ? "cash" : "steam",
         activeCSProfile: typeof data.activeCSProfile === "string" ? data.activeCSProfile : "",
       };
-    } catch { showToast("Module konnten nicht aus dem Browser geladen werden.", "error"); return defaults(); }
+  }
+  function load() {
+    // Read old browser data only to migrate it; new changes never use local storage.
+    try { return normalizeSettings(JSON.parse(localStorage.getItem(storageKey()) || "null")); }
+    catch { return defaults(); }
   }
   function cancelRequests() { controllers.forEach(c => c.abort()); controllers = []; }
   function invalidate() { generation++; cancelRequests(); cryptoBusy = false; inventoryBusy = false; }
@@ -179,14 +190,13 @@
     panel.classList.toggle("hidden", !userId);
     render();
     if (userId) loadCloudNotes();
-    if (userId && settings.enabled.includes("crypto") && settings.holdings.length) refreshCrypto();
-    if (userId && settings.enabled.includes("cs2") && settings.profiles.length) refreshInventories();
+    
   }
   function render() {
     grid.replaceChildren();
     notesDock.replaceChildren(); rightNotesDock.replaceChildren(); portfolioPanel.replaceChildren(); inventoryPanel.replaceChildren();
-    const showNotes = Boolean(userId && settings.enabled.includes("notes"));
-    const showPortfolio = Boolean(userId && settings.enabled.includes("crypto"));
+    const showNotes = Boolean(userId && cloudReady && settings.enabled.includes("notes"));
+    const showPortfolio = Boolean(userId && cloudReady && settings.enabled.includes("crypto"));
     panel.classList.add("hidden");
     notesDock.classList.toggle("hidden", !showNotes || !settings.noteItems.some(note => note.side !== "right"));
     const showRightNotes = showNotes && settings.noteItems.some(note => note.side === "right");
@@ -200,7 +210,7 @@
     const complete = settings.holdings.length && settings.holdings.every(h => prices.has(h.symbol));
     portfolioButton.textContent = `Portfolio ${prices.size ? (complete ? "" : "≈ ") + money(total) : "—"}`;
     document.getElementById("modules-empty").classList.toggle("hidden", settings.enabled.length > 0);
-    if (!userId) return;
+    if (!userId || !cloudReady) return;
     for (const id of settings.enabled) {
       const module = catalog.find(item => item.id === id);
       if (id === "notes") {
@@ -455,7 +465,7 @@
     return /^765\d{14}$/.test(id || "") ? `https://www.steamanalyst.com/inventory/${id}` : null;
   }
   function renderInventoryHeader() {
-    const visible = Boolean(userId && settings.enabled.includes("cs2"));
+    const visible = Boolean(userId && cloudReady && settings.enabled.includes("cs2"));
     inventoryInfo.classList.toggle("hidden", !visible);
     inventoryPanel.classList.toggle("hidden", !visible || !inventoryOpen);
     inventorySettings.setAttribute("aria-expanded", String(visible && inventoryOpen));
@@ -609,10 +619,11 @@
   inventorySettings.className = "module-button inventory-picker-settings hidden";
   inventorySettings.textContent = "⚙";
   inventorySettings.title = "CS2-Inventare verwalten";
-  content.append(list); message(content, "Notizen, Farben und Klappzustände werden in deinem Konto gespeichert. Portfolio-Mengen und Profillisten bleiben in diesem Browser."); content.append(button("Fertig", closePicker)); picker.append(backdrop, content); document.body.append(picker);
+  content.append(list); message(content, "Notizen, Portfolio-Mengen, Steam-Profile und Moduleinstellungen werden automatisch in deinem Konto gespeichert."); content.append(button("Fertig", closePicker)); picker.append(backdrop, content); document.body.append(picker);
   function closePicker() { picker.classList.add("hidden"); document.getElementById("add-tile-btn").focus(); }
   window.KH7_OPEN_ADD_MENU = () => {
     if (!userId) return;
+    if (!cloudReady) { showToast("Dein Dashboard wird noch aus dem Konto geladen."); return; }
     list.querySelectorAll("[data-add-module]").forEach(item => {
       item.disabled = item.dataset.addModule === "notes" ? settings.noteItems.length >= 50 : settings.enabled.includes(item.dataset.addModule);
       const module = catalog.find(value => value.id === item.dataset.addModule);
@@ -660,6 +671,10 @@
     else if (noteDirty) writeNote();
   }
   window.addEventListener("online", retryNoteSync);
+  window.addEventListener("beforeunload", event => {
+    if (!userId || !noteDirty) return;
+    writeNote(); event.preventDefault(); event.returnValue = "";
+  });
   window.setInterval(() => { if (!document.hidden) retryNoteSync(); }, 30000);
   if (typeof state !== "undefined") setSession({ isAdmin: state.isAdmin, userId: state.user?.id });
   window.setInterval(() => { if (!document.hidden && userId) refreshCrypto(); }, 300000);
