@@ -54,7 +54,7 @@
       // Preserve the provider's ranking, including tie-break rules.
       cache.table.forEach((team,index)=>{const row=el("tr");if(isBVB(team))row.className="bvb-highlight";row.append(el("td",String(index+1)));const club=el("td");club.append(teamLabel(team));row.append(club);for(const value of [team.matches,team.goalDiff,team.points])row.append(el("td",String(value??"—")));body.append(row);});table.append(body);parent.append(table);
     }else parent.append(el("p","Noch keine Tabelle verfügbar.","module-muted"));
-    const source=el("a","Daten: OpenLigaDB · ODbL","module-muted");source.href="https://www.openligadb.de/lizenz";source.target="_blank";source.rel="noopener noreferrer";parent.append(source,el("p",`Abruf ${cache.updated.toLocaleTimeString("de-DE",{timeZone:"Europe/Berlin",hour:"2-digit",minute:"2-digit"})} · Termine laut Datenquelle`,"module-muted"));
+
   }
   window.KH7_RENDER_BVB = parent => {paint(parent);if(!cache||cache.season!==season()||Date.now()-cache.at>=900000)load().then(()=>paint(parent));};
   window.setInterval(()=>{const nodes=[...document.querySelectorAll("[data-bvb-content]")];if(!document.hidden&&nodes.length)load().then(()=>nodes.forEach(paint));},900000);
