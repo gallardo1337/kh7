@@ -418,7 +418,6 @@
     return select;
   }
   function renderCryptoSummary(parent) {
-    parent.append(el("div", "Portfolio", "forecast-title"));
     for (const holding of settings.holdings) {
       const row = el("div", undefined, "forecast-day crypto-forecast-row");
       const quote = prices.get(holding.symbol);
