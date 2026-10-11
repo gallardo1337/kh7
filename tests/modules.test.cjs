@@ -50,14 +50,14 @@ function create() {
       };
     }, auth: { getSession: async () => ({ data: { session: { access_token: 'valid-token' } } }) } } },
     showToast: message => alerts.push(message), openAddTileModal: () => tileDialogs++, AbortController, clearTimeout, setTimeout,
-    window: { setTimeout, setInterval() {}, addEventListener: (event, fn) => { events[event] = fn; } },
+    window: { KH7_CONFIG: { supabaseUrl: "https://test.supabase.co", supabasePublishableKey: "public-key" }, setTimeout, setInterval() {}, addEventListener: (event, fn) => { events[event] = fn; } },
     fetch: async (url, options) => {
       let data; let ok = true;
       if (url.includes('AssetPairs')) data = { error: [], result: markets };
       else if (url.includes('Ticker')) {
         if (failCrypto) throw Error('Offline');
         data = { error: [], result: { XXBTZEUR: { c: ['10000'] }, XETHZEUR: { c: ['2000'] }, XXBTZUSD: { c: ['15000'] } } };
-      } else if (url === 'api/inventory.php') {
+      } else if (url === 'https://test.supabase.co/functions/v1/cs2-inventory') {
         csrfCalls++;
         assert.equal(options.headers.Authorization, 'Bearer valid-token');
         const body = JSON.parse(options.body);

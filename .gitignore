@@ -1,0 +1,4 @@
+.env
+.env.*
+supabase/functions/.env
+kh7-secrets.php

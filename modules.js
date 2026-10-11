@@ -180,6 +180,7 @@
     render();
     if (userId) loadCloudNotes();
     if (userId && settings.enabled.includes("crypto") && settings.holdings.length) refreshCrypto();
+    if (userId && settings.enabled.includes("cs2") && settings.profiles.length) refreshInventories();
   }
   function render() {
     grid.replaceChildren();
@@ -464,7 +465,7 @@
       value.addEventListener("click", openSettings);
       value.addEventListener("keydown", event => { if (!href && (event.key === "Enter" || event.key === " ")) openSettings(event); });
       value.setAttribute("aria-label", `${profile.label}: ${result ? money(result.total) : "Wert noch nicht verfügbar"}. ${href ? "Auf SteamAnalyst öffnen" : "SteamID64 in der Profilverwaltung eintragen"}`);
-      value.title = `${profile.label} · ${result ? "Schätzung von SteamWebAPI" : "Automatische Bewertung noch nicht eingerichtet"}`;
+      value.title = `${profile.label} · ${result ? "SteamAnalyst-Itempreise · Preis-Sicherung bis 24 Stunden" : "Wert noch nicht geladen"}`;
       inventoryValues.append(value);
     }
   }
@@ -474,10 +475,7 @@
     currency.setAttribute("aria-label", "Inventar-Währung");
     currency.addEventListener("change", () => changeCurrency(currency.value));
     card.append(currency);
-    const valuation = choice([["steam", "Steam-Marktpreise"], ["cash", "Drittanbieter-Marktpreise"]], settings.valuation);
-    valuation.setAttribute("aria-label", "CS2-Preisquelle");
-    valuation.addEventListener("change", () => { generation++; cancelRequests(); inventoryBusy = false; cryptoBusy = false; settings.valuation = valuation.value; inventories.clear(); save(); render(); });
-    card.append(valuation);
+    message(card, "SteamAnalyst-Itempreise · USD-Preise, Euro-Umrechnung zum EZB-Referenzkurs.");
     const available = settings.profiles.filter(p => inventories.has(p.profile));
     const total = available.reduce((sum, p) => sum + inventories.get(p.profile).total, 0);
     card.append(el("div", available.length ? money(total) : "—", "module-big-value"));
@@ -516,7 +514,7 @@
     const details = el("details"); details.append(el("summary", "Steam-Profile verwalten"), form); details.open = !settings.profiles.length; card.append(details);
     const refresh = button(inventoryBusy ? "Inventare werden geladen …" : "Inventarwerte aktualisieren", refreshInventories);
     refresh.disabled = inventoryBusy || !settings.profiles.length; card.append(refresh);
-    const progress = message(card, "Automatische Bewertung benötigt einen auf dem Server eingerichteten Preis- und Inventardienst.");
+    const progress = message(card, "Preise bis 24 Stunden gespeichert · maximal 20 neue Itempreise je Abruf. Fehlende Preise ergeben einen markierten Teilwert.");
     progress.dataset.inventoryStatus = ""; progress.setAttribute("aria-live", "polite");
     message(card, "Schätzung der sichtbaren Inventargegenstände ohne Gebühren und individuelle Sticker-Aufpreise. Items ohne Preis werden nicht mitgerechnet.");
   }
@@ -532,13 +530,14 @@
       for (const profile of settings.profiles.slice()) {
         if (current !== generation) return;
         try {
-          const result = await json("api/inventory.php", {
-            method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.data.session.access_token}` },
+          const result = await json(`${window.KH7_CONFIG.supabaseUrl}/functions/v1/cs2-inventory`, {
+            method: "POST", headers: { "Content-Type": "application/json", apikey: window.KH7_CONFIG.supabasePublishableKey, Authorization: `Bearer ${session.data.session.access_token}` },
             body: JSON.stringify({ profile: profile.profile, currency: settings.currency, valuation: settings.valuation }),
           });
           if (current !== generation) return;
           if (!Number.isFinite(result.total) || result.total < 0 || !Number.isFinite(result.itemCount) || !Number.isFinite(result.unpricedCount) || !Number.isFinite(Date.parse(result.updatedAt))) throw new Error("Ungültige Inventarantwort.");
           inventories.set(profile.profile, result); success++;
+          if (result.warning) errors.push(`${profile.label}: ${result.warning}`);
         } catch (error) { if (current !== generation) return; inventories.delete(profile.profile); errors.push(`${profile.label}: ${error.message}`); }
       }
     } catch (error) { errors.push(error.message); }
@@ -546,7 +545,7 @@
       if (current === generation) {
         inventoryBusy = false; render();
         const status = inventoryPanel.querySelector("[data-inventory-status]");
-        if (status) status.textContent = `${success} Profile aktualisiert.` + (errors.length ? ` ${errors.join(" ")} Fehlende Profile werden nicht mitgerechnet.` : " Quelle: SteamWebAPI.");
+        if (status) status.textContent = `${success} Profile aktualisiert.` + (errors.length ? ` ${errors.join(" ")} Fehlende Profile werden nicht mitgerechnet.` : " Quelle: SteamAnalyst · Itempreise bis 24 Stunden gespeichert.");
       }
     }
   }
@@ -627,4 +626,5 @@
   });
   if (typeof state !== "undefined") setSession({ isAdmin: state.isAdmin, userId: state.user?.id });
   window.setInterval(() => { if (!document.hidden && userId) refreshCrypto(); }, 300000);
+  window.setInterval(() => { if (!document.hidden && userId && settings.enabled.includes("cs2")) refreshInventories(); }, 900000);
 })();
