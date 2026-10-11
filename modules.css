@@ -211,7 +211,6 @@
 .bvb-kickoff, .bvb-versus { flex-shrink: 0; }
 @media (min-width: 1101px) {
   .dashboard-right-rail:has([data-module="bvb"]) { width: max(340px, min(var(--right-note-width, 280px), max(280px, calc((100vw - 700px) / 2)))); }
-  body:has([data-module="bvb"]) .dashboard-layout { display: block; margin-right: calc(max(340px, min(var(--right-note-width, 280px), max(280px, calc((100vw - 700px) / 2)))) + 34px); }
 }
 @media (max-width: 1100px) {
   .dashboard-right-rail:has([data-module="bvb"]) { width: min(calc(100% - 24px), 340px); }
@@ -224,3 +223,26 @@
 .bvb-team-logo.bvb-team-logo-wide img { width: 100%; }
 .bvb-table .bvb-team-logo.bvb-team-logo-wide { width: 30px; flex-basis: 30px; }
 .bvb-table .bvb-team-logo.bvb-team-logo-wide img { width: 100%; }
+
+/* Side modules must never change the position or width of the central dashboard. */
+body .dashboard-layout,
+body:has(.notes-dock:not(.hidden)) .dashboard-layout,
+body .dashboard-layout:has(> .dashboard-right-rail.hidden) {
+  display: block;
+  width: auto;
+  max-width: calc(var(--container-max-width) + 48px);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+/* Put the right rail after the dashboard when the side space is insufficient. */
+@media (min-width: 1101px) and (max-width: 1799px) {
+  .dashboard-right-rail {
+    position: static;
+    width: min(100%, 340px);
+    max-height: none;
+    overflow: visible;
+    margin: 24px auto;
+    padding: 0;
+  }
+  .dashboard-right-rail:has([data-module="bvb"]) { width: min(100%, 340px); }
+}
