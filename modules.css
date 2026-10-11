@@ -1,6 +1,6 @@
 .dashboard-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, var(--container-max-width)) minmax(0, 1fr); column-gap: 28px; padding: 0 24px; }
 .dashboard-primary { grid-column: 2; min-width: 0; }
-.dashboard-layout:has(> .modules-panel.hidden) { display: block; max-width: calc(var(--container-max-width) + 48px); margin: 0 auto; }
+.dashboard-layout:has(> .dashboard-right-rail.hidden) { display: block; max-width: calc(var(--container-max-width) + 48px); margin: 0 auto; }
 .modules-panel { grid-column: 3; width: min(100%, 340px); min-width: 0; margin: 40px 0 70px; text-align: left; align-self: start; }
 .modules-toolbar, .module-heading, .module-price-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .modules-toolbar h2 { font-size: 1.1rem; font-weight: 500; color: #ddd; }
@@ -89,3 +89,14 @@
 .sticky-note .module-heading .module-button { flex-shrink: 0; font-size: .78rem; padding: 6px 8px; }
 .module-card.note-collapsed { padding-bottom: 20px; }
 .note-collapsed .module-heading { margin-bottom: 0; }
+.dashboard-right-rail { grid-column: 3; min-width: 0; width: min(100%, 340px); margin: 40px 0 70px; }
+.dashboard-right-rail .modules-panel { width: 100%; margin: 24px 0 0; }
+.notes-dock-right { position: static; width: 100%; max-height: none; overflow: visible; padding: 0; margin: 0; }
+.sticky-note .module-heading { gap: 8px; }
+.sticky-note .module-heading h3 { flex: 1; }
+.sticky-note .module-heading .note-drag-handle { cursor: grab; font-size: 1.2rem; padding: 3px 6px; touch-action: manipulation; }
+.note-drag-handle:active { cursor: grabbing; }
+.notes-dragging .notes-dock { min-height: 150px; outline: 2px dashed #85dcaa; outline-offset: 6px; border-radius: 8px; }
+.notes-dragging .notes-dock:empty::before { content: "Notiz hier ablegen"; padding: 30px 12px; color: #b3e3c5; text-align: center; }
+@media (max-width: 1750px) { .dashboard-right-rail { grid-column: 2; } }
+@media (max-width: 1100px) { .dashboard-right-rail { width: min(100%, 360px); margin: 24px auto; } .notes-dock-right { width: 100%; margin: 0; } }

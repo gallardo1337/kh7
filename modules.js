@@ -10,6 +10,9 @@
   const panel = document.getElementById("modules-panel");
   const grid = document.getElementById("modules-grid");
   const notesDock = document.getElementById("notes-dock");
+  const rightNotesDock = document.getElementById("notes-dock-right");
+  const rightRail = document.getElementById("dashboard-right-rail");
+  let draggedNoteId = null;
   const portfolioButton = document.getElementById("portfolio-info");
   const portfolioPanel = document.getElementById("portfolio-panel");
   let portfolioOpen = false;
@@ -56,7 +59,7 @@
   }
   function updateNoteStatus(text) {
     noteStatus = text;
-    notesDock.querySelectorAll("[data-note-status]").forEach(status => { status.textContent = text; });
+    [notesDock, rightNotesDock].forEach(dock => dock.querySelectorAll("[data-note-status]").forEach(status => { status.textContent = text; }));
   }
   function queueNoteSave() {
     updateNoteStatus(cloudReady ? "Wird in deinem Konto gespeichert …" : "Notiz wird synchronisiert …");
@@ -111,7 +114,7 @@
     return source.slice(0, 50).filter(note => note && typeof note === "object").map(note => {
       let id = typeof note.id === "string" && /^[a-zA-Z0-9-]{1,80}$/.test(note.id) && !ids.has(note.id) ? note.id : newNoteId();
       ids.add(id);
-      return { id, content: typeof note.content === "string" ? note.content.slice(0, 20000) : "", color: noteColors.some(([key]) => key === note.color) ? note.color : "yellow", collapsed: note.collapsed === true };
+      return { id, content: typeof note.content === "string" ? note.content.slice(0, 20000) : "", color: noteColors.some(([key]) => key === note.color) ? note.color : "yellow", collapsed: note.collapsed === true, side: note.side === "right" ? "right" : "left" };
     });
   }
   function load() {
@@ -154,6 +157,7 @@
     const nextId = detail.isAdmin ? detail.userId : null;
     if (nextId === userId) return;
     sessionEpoch++; clearTimeout(cloudTimer);
+    draggedNoteId = null; document.body.classList.remove("notes-dragging");
     cloudReady = false; noteDirty = false; noteRevision = 0;
     noteStatus = "Notiz wird aus deinem Konto geladen …";
     portfolioOpen = false;
@@ -172,11 +176,14 @@
   }
   function render() {
     grid.replaceChildren();
-    notesDock.replaceChildren(); portfolioPanel.replaceChildren();
+    notesDock.replaceChildren(); rightNotesDock.replaceChildren(); portfolioPanel.replaceChildren();
     const showNotes = Boolean(userId && settings.enabled.includes("notes"));
     const showPortfolio = Boolean(userId && settings.enabled.includes("crypto"));
     panel.classList.toggle("hidden", !userId || !settings.enabled.includes("cs2"));
-    notesDock.classList.toggle("hidden", !showNotes);
+    notesDock.classList.toggle("hidden", !showNotes || !settings.noteItems.some(note => note.side !== "right"));
+    const showRightNotes = showNotes && settings.noteItems.some(note => note.side === "right");
+    rightNotesDock.classList.toggle("hidden", !showRightNotes);
+    rightRail.classList.toggle("hidden", !showRightNotes && (!userId || !settings.enabled.includes("cs2")));
     portfolioButton.classList.toggle("hidden", !showPortfolio);
     portfolioPanel.classList.toggle("hidden", !showPortfolio || !portfolioOpen);
     portfolioButton.setAttribute("aria-expanded", String(showPortfolio && portfolioOpen));
@@ -191,7 +198,7 @@
         settings.noteItems.forEach((note, index) => {
           const card = el("article", undefined, "module-card");
           card.dataset.module = "notes"; card.dataset.noteId = note.id;
-          renderNotes(card, note, index); notesDock.append(card);
+          renderNotes(card, note, index); (note.side === "right" ? rightNotesDock : notesDock).append(card);
         });
         continue;
       }
@@ -210,6 +217,30 @@
   }
   function renderNotes(card, note, index) {
     const heading = el("div", undefined, "module-heading");
+    const handle = button("⠿", () => moveNote(note.id, note.side === "right" ? "left" : "right"));
+    handle.className = "module-button note-drag-handle";
+    handle.draggable = true;
+    handle.dataset.noteDrag = "";
+    handle.title = "Zum Verschieben ziehen · Klicken wechselt die Seite";
+    handle.setAttribute("aria-label", `Notiz ${index + 1} verschieben. Ziehen oder klicken zum Seitenwechsel.`);
+    handle.addEventListener("dragstart", event => {
+      if (!userId) { event.preventDefault(); return; }
+      draggedNoteId = note.id;
+      event.dataTransfer.setData("text/plain", note.id);
+      event.dataTransfer.effectAllowed = "move";
+      document.body.classList.add("notes-dragging");
+      [notesDock, rightNotesDock, rightRail].forEach(node => node.classList.remove("hidden"));
+    });
+    handle.addEventListener("dragend", () => { draggedNoteId = null; document.body.classList.remove("notes-dragging"); render(); });
+    handle.addEventListener("keydown", event => {
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); moveNote(note.id, event.key === "ArrowRight" ? "right" : "left"); }
+    });
+    card.addEventListener("dragover", event => { if (draggedNoteId) event.preventDefault(); });
+    card.addEventListener("drop", event => {
+      if (!draggedNoteId) return;
+      event.preventDefault(); event.stopPropagation();
+      moveNote(draggedNoteId, note.side === "right" ? "right" : "left", note.id);
+    });
     const title = el("h3", `Notiz ${index + 1}`);
     const body = el("div", undefined, "note-content"); body.id = `note-body-${note.id}`;
     const toggle = button("", () => { note.collapsed = !note.collapsed; updateCollapsed(); save(true); });
@@ -222,7 +253,7 @@
       toggle.setAttribute("aria-expanded", String(!note.collapsed));
       title.textContent = note.collapsed && note.content.trim() ? note.content.trim().split("\n")[0] : `Notiz ${index + 1}`;
     }
-    heading.append(title, toggle); card.append(heading, body); updateCollapsed();
+    heading.append(handle, title, toggle); card.append(heading, body); updateCollapsed();
     card.classList.add("sticky-note");
     card.dataset.noteColor = note.color;
     const palette = el("div", undefined, "note-palette");
@@ -256,6 +287,30 @@
     });
     body.append(palette, input, status);
     body.append(button("Synchronisieren", () => { if (cloudReady) { noteDirty = true; queueNoteSave(); } else loadCloudNotes(); }));
+  }
+  function moveNote(id, side, beforeId) {
+    if (!userId) return;
+    const note = settings.noteItems.find(item => item.id === id);
+    if (!note || id === beforeId) return;
+    note.side = side;
+    settings.noteItems = settings.noteItems.filter(item => item !== note);
+    const targetIndex = beforeId ? settings.noteItems.findIndex(item => item.id === beforeId) : -1;
+    if (targetIndex >= 0) settings.noteItems.splice(targetIndex, 0, note);
+    else settings.noteItems.push(note);
+    draggedNoteId = null; document.body.classList.remove("notes-dragging");
+    save(true); render();
+    const dock = side === "right" ? rightNotesDock : notesDock;
+    [...dock.children].find(item => item.dataset.noteId === id)?.querySelector("[data-note-drag]")?.focus();
+  }
+  for (const [dock, side] of [[notesDock, "left"], [rightNotesDock, "right"]]) {
+    dock.addEventListener("dragover", event => {
+      if (!draggedNoteId || !userId) return;
+      event.preventDefault(); event.dataTransfer.dropEffect = "move";
+    });
+    dock.addEventListener("drop", event => {
+      if (!draggedNoteId || !userId) return;
+      event.preventDefault(); moveNote(draggedNoteId, side);
+    });
   }
   function field(form, label, input) {
     const wrapper = el("label", label);
