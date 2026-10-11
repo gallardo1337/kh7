@@ -39,7 +39,7 @@
 .dashboard-status-row .weather-info { position: static; flex-shrink: 0; }
 .portfolio-info { background: #141414b3; border: 0; border-radius: 20px; padding: 6px 14px; font: 1rem monospace; color: #eee; cursor: pointer; white-space: nowrap; }
 .portfolio-info:focus-visible { outline: 2px solid #85dcaa; }
-.inventory-info { display: flex; align-items: center; gap: 5px; }
+.inventory-info, .inventory-values { display: flex; align-items: center; gap: 5px; }
 .inventory-info a { text-decoration: none; }
 .inventory-info a:not([href]) { cursor: pointer; }
 .inventory-info select { background: #252525; color: #eee; border: 1px solid #ffffff26; border-radius: 12px; padding: 5px; max-width: 120px; }
@@ -107,3 +107,7 @@
 .notes-dragging .notes-dock:empty::before { content: "Notiz hier ablegen"; padding: 30px 12px; color: #b3e3c5; text-align: center; }
 @media (max-width: 1750px) { .dashboard-right-rail { grid-column: 2; } }
 @media (max-width: 1100px) { .dashboard-right-rail { width: min(100%, 360px); margin: 24px auto; } .notes-dock-right { width: 100%; margin: 0; } }
+
+.dashboard-status-row { flex-wrap: wrap; }
+.inventory-values { flex-wrap: wrap; }
+.inventory-values .portfolio-info { font-size: .9rem; }

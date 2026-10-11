@@ -16,8 +16,7 @@
   const portfolioButton = document.getElementById("portfolio-info");
   const portfolioPanel = document.getElementById("portfolio-panel");
   const inventoryInfo = document.getElementById("inventory-info");
-  const inventoryAccount = document.getElementById("inventory-account");
-  const inventoryValue = document.getElementById("inventory-value");
+  const inventoryValues = document.getElementById("inventory-values");
   const inventorySettings = document.getElementById("inventory-settings");
   const inventoryPanel = document.getElementById("inventory-panel");
   let inventoryOpen = false;
@@ -448,21 +447,28 @@
     inventoryInfo.classList.toggle("hidden", !visible);
     inventoryPanel.classList.toggle("hidden", !visible || !inventoryOpen);
     inventorySettings.setAttribute("aria-expanded", String(visible && inventoryOpen));
-    inventoryAccount.replaceChildren();
-    for (const profile of settings.profiles) {
-      const option = el("option", profile.label); option.value = profile.profile; inventoryAccount.append(option);
+    inventoryValues.replaceChildren();
+    if (!visible) return;
+    if (!settings.profiles.length) {
+      inventoryValues.append(button("CS2 —", () => { inventoryOpen = true; render(); }));
+      return;
     }
-    const active = settings.profiles.find(profile => profile.profile === settings.activeCSProfile) || settings.profiles[0];
-    inventoryAccount.value = active?.profile || "";
-    inventoryAccount.classList.toggle("hidden", settings.profiles.length < 2);
-    const result = active && inventories.get(active.profile);
-    inventoryValue.textContent = `CS2 ${result ? (result.unpricedCount ? "≈ " : "") + money(result.total) : "—"}`;
-    const href = active && steamAnalystURL(active.profile);
-    if (href) inventoryValue.setAttribute("href", href);
-    else inventoryValue.removeAttribute("href");
-    inventoryValue.setAttribute("aria-label", active ? `${active.label}: ${result ? money(result.total) : "Wert noch nicht verfügbar"}. ${href ? "Auf SteamAnalyst öffnen" : "SteamID64 in der Profilverwaltung eintragen"}` : "Steam-Account hinzufügen");
-    inventoryValue.title = active ? `${active.label} · ${result ? "Schätzung von SteamWebAPI" : "Automatische Bewertung noch nicht eingerichtet"}` : "Steam-Account hinzufügen";
+    for (const profile of settings.profiles) {
+      const result = inventories.get(profile.profile);
+      const value = el("a", `${profile.label} · CS2 ${result ? (result.unpricedCount ? "≈ " : "") + money(result.total) : "—"}`, "portfolio-info");
+      value.dataset.inventoryProfile = profile.profile;
+      const href = steamAnalystURL(profile.profile);
+      if (href) { value.href = href; value.target = "_blank"; value.rel = "noopener noreferrer"; }
+      else { value.setAttribute("role", "button"); value.setAttribute("tabindex", "0"); }
+      const openSettings = event => { if (!href) { event.preventDefault(); inventoryOpen = true; render(); } };
+      value.addEventListener("click", openSettings);
+      value.addEventListener("keydown", event => { if (!href && (event.key === "Enter" || event.key === " ")) openSettings(event); });
+      value.setAttribute("aria-label", `${profile.label}: ${result ? money(result.total) : "Wert noch nicht verfügbar"}. ${href ? "Auf SteamAnalyst öffnen" : "SteamID64 in der Profilverwaltung eintragen"}`);
+      value.title = `${profile.label} · ${result ? "Schätzung von SteamWebAPI" : "Automatische Bewertung noch nicht eingerichtet"}`;
+      inventoryValues.append(value);
+    }
   }
+
   function renderCS2(card) {
     const currency = choice([["EUR", "Euro (€)"], ["USD", "US-Dollar ($)"]], settings.currency);
     currency.setAttribute("aria-label", "Inventar-Währung");
@@ -596,11 +602,6 @@
     }
   });
   window.addEventListener("kh7-session", event => setSession(event.detail));
-  inventoryAccount.addEventListener("change", () => { settings.activeCSProfile = inventoryAccount.value; save(); renderInventoryHeader(); });
-  inventoryValue.addEventListener("click", event => {
-    const active = settings.profiles.find(profile => profile.profile === inventoryAccount.value);
-    if (!active || !steamAnalystURL(active.profile)) { event.preventDefault(); inventoryOpen = true; render(); }
-  });
   inventorySettings.addEventListener("click", () => {
     inventoryOpen = !inventoryOpen;
     if (inventoryOpen) { portfolioOpen = false; portfolioPanel.classList.add("hidden"); portfolioButton.setAttribute("aria-expanded", "false"); document.getElementById("weather-panel")?.classList.add("hidden"); document.getElementById("weather-info")?.setAttribute("aria-expanded", "false"); }
