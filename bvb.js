@@ -19,7 +19,11 @@
   }
   function teamLabel(team) {
     const name=team?.teamName || "Unbekannter Verein",node=el("span",undefined,"bvb-team");node.setAttribute("title",name);
-    node.append(logo(team?.teamIconUrl,name,"bvb-team-logo",name.slice(0,3).toUpperCase()),el("span",team?.shortName||name,"bvb-team-name"));return node;
+    // Override missing or low-quality provider crests in fixtures and standings.
+    const crest=/paderborn/i.test(name)?{url:"https://upload.wikimedia.org/wikipedia/commons/6/67/SC_Paderborn_07_Logo_new.svg",wide:true}:
+      /union.*berlin/i.test(name)?{url:"https://upload.wikimedia.org/wikipedia/commons/4/44/1._FC_Union_Berlin_Logo.svg",wide:true}:
+      /\bsabah\b/i.test(name)?{url:"https://sabahfc.az/static/dist/img/SABAH%20FC%20LOGO%201.png"}:null;
+    node.append(logo(crest?.url||team?.teamIconUrl,name,`bvb-team-logo${crest?.wide?" bvb-team-logo-wide":""}`,name.slice(0,3).toUpperCase()),el("span",team?.shortName||name,"bvb-team-name"));return node;
   }
   const kickoff = match => { const utc=match.matchDateTimeUTC; return utc ? new Date(/[zZ]|[+-]\d\d:\d\d$/.test(utc)?utc:`${utc}Z`) : null; };
   const season = () => { const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Berlin",year:"numeric",month:"numeric"}).formatToParts(new Date());const year=Number(parts.find(p=>p.type==="year").value),month=Number(parts.find(p=>p.type==="month").value);return month>=7?year:year-1; };
