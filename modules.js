@@ -342,25 +342,41 @@
   const picker = el("div", undefined, "modal hidden"); picker.id = "modules-modal"; picker.setAttribute("role", "dialog"); picker.setAttribute("aria-modal", "true"); picker.setAttribute("aria-labelledby", "modules-modal-title");
   const backdrop = button("", closePicker); backdrop.className = "modal-bg"; backdrop.setAttribute("aria-label", "Schließen");
   const content = el("div", undefined, "modal-content");
-  const heading = el("div", undefined, "modal-header"); const title = el("span", "Module hinzufügen"); title.id = "modules-modal-title";
+  const heading = el("div", undefined, "modal-header"); const title = el("span", "Was möchtest du hinzufügen?"); title.id = "modules-modal-title";
   heading.append(title, button("Schließen", closePicker)); content.append(heading);
   const list = el("div", undefined, "module-picker-list");
+  function addChoice(title, description, action) {
+    const item = button("", action);
+    item.className = "add-choice";
+    item.append(el("strong", title), el("span", description, "module-muted"));
+    list.append(item);
+    return item;
+  }
+  addChoice("Link-Kachel", "Eine Webseite zu deinen Favoriten hinzufügen.", () => {
+    closePicker();
+    openAddTileModal();
+  });
   for (const module of catalog) {
-    const item = el("div", undefined, "module-picker-item"); const label = el("label"); const check = el("input"); check.type = "checkbox"; check.dataset.module = module.id;
-    check.addEventListener("change", () => {
+    const item = addChoice(module.title, module.description, () => {
+      if (!userId || settings.enabled.includes(module.id)) return;
       generation++; cancelRequests(); cryptoBusy = false; inventoryBusy = false;
-      settings.enabled = check.checked ? [...new Set([...settings.enabled, module.id])] : settings.enabled.filter(id => id !== module.id);
-      save(); render();
-      if (check.checked && module.id === "crypto") refreshCrypto();
+      settings.enabled.push(module.id);
+      save(); render(); closePicker();
+      if (module.id === "crypto") refreshCrypto();
     });
-    label.append(check, el("strong", module.title)); item.append(label); message(item, module.description); list.append(item);
+    item.dataset.addModule = module.id;
   }
   content.append(list); message(content, "Eingaben bleiben beim Ausblenden erhalten. Module und Inhalte werden nur in diesem Browser gespeichert."); content.append(button("Fertig", closePicker)); picker.append(backdrop, content); document.body.append(picker);
-  function closePicker() { picker.classList.add("hidden"); document.getElementById("modules-manage").focus(); }
-  document.getElementById("modules-manage").addEventListener("click", () => {
-    list.querySelectorAll("input").forEach(check => { check.checked = settings.enabled.includes(check.dataset.module); });
-    picker.classList.remove("hidden"); list.querySelector("input").focus();
-  });
+  function closePicker() { picker.classList.add("hidden"); document.getElementById("add-tile-btn").focus(); }
+  window.KH7_OPEN_ADD_MENU = () => {
+    if (!userId) return;
+    list.querySelectorAll("[data-add-module]").forEach(item => {
+      item.disabled = settings.enabled.includes(item.dataset.addModule);
+      const module = catalog.find(value => value.id === item.dataset.addModule);
+      item.querySelector("span").textContent = item.disabled ? "Bereits hinzugefügt · in der Seitenleiste verfügbar" : module.description;
+    });
+    picker.classList.remove("hidden"); list.querySelector("button").focus();
+  };
   picker.addEventListener("keydown", event => {
     if (event.key === "Escape") { event.preventDefault(); closePicker(); }
     if (event.key === "Tab") {

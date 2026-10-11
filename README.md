@@ -21,7 +21,7 @@ Die Datenbankrichtlinien geben unangemeldeten Besuchern keine Kacheln aus. Nur d
 
 ## Module
 
-Nach der Anmeldung unter „Meine Module → Module hinzufügen“ Notizen, Krypto-Portfolio und CS2-Inventare einzeln aktivieren. Ausblenden löscht keine Eingaben. Einstellungen und Inhalte werden pro angemeldetem Konto ausschließlich im lokalen Browser gespeichert; keine Synchronisierung zwischen Geräten. Beim Abmelden verschwinden sie vom Dashboard, bleiben aber im Browser gespeichert.
+Nach der Anmeldung über das Plus oben wählen, ob eine Link-Kachel, Notizen, ein Krypto-Portfolio oder CS2-Inventare hinzugefügt werden sollen. Bereits aktivierte Module werden in der Auswahl kenntlich gemacht. Ausblenden löscht keine Eingaben. Einstellungen und Inhalte werden pro angemeldetem Konto ausschließlich im lokalen Browser gespeichert; keine Synchronisierung zwischen Geräten. Beim Abmelden verschwinden sie vom Dashboard, bleiben aber im Browser gespeichert.
 
 Notizen werden beim Schreiben gespeichert. Das Portfolio akzeptiert Coin-Kürzel und Mengen mit Dezimalpunkt oder Dezimalkomma (ohne Tausendertrennzeichen). Erneutes Hinzufügen desselben Coins ersetzt die Menge. Kurse stammen von Kraken; nur Coins mit einem direkten EUR-/USD-Markt werden unterstützt. Preise werden beim Öffnen und alle fünf Minuten bei sichtbarer Seite aktualisiert. Bei Fehlern wird der letzte Stand kenntlich beibehalten; fehlende Kurse zählen nicht zur Teilsumme.
 

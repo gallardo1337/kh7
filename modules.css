@@ -24,6 +24,10 @@
 .module-big-value { font-size: 2rem; font-weight: 600; margin: 20px 0 8px; }
 .module-positive { color: #85dcaa; } .module-negative { color: #ff9a99; }
 .module-picker-list { display: grid; gap: 12px; margin: 18px 0; }
+.add-choice { display: flex; flex-direction: column; gap: 6px; width: 100%; text-align: left; padding: 16px; border: 1px solid #ffffff26; border-radius: 12px; background: #ffffff04; cursor: pointer; }
+.add-choice:hover { border-color: #85dcaa; background: #ffffff0b; }
+.add-choice:focus-visible { outline: 2px solid #85dcaa; outline-offset: 3px; }
+.add-choice:disabled { opacity: .5; cursor: default; border-color: #ffffff16; background: #ffffff04; }
 .module-picker-item { padding: 14px; border: 1px solid #ffffff20; border-radius: 12px; }
 .module-picker-item label { display: flex; gap: 12px; align-items: center; cursor: pointer; }
 .module-picker-item input { width: 18px; height: 18px; accent-color: #85dcaa; }

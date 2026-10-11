@@ -700,7 +700,10 @@ function bindEvents() {
   elements.lockButton.addEventListener("click", handleLockButton);
   elements.authModeToggle.classList.toggle("hidden", !window.KH7_CONFIG?.allowSignup);
   elements.authModeToggle.addEventListener("click", () => setAuthMode(state.authMode === "login" ? "signup" : "login"));
-  elements.addTileButton.addEventListener("click", openAddTileModal);
+  elements.addTileButton.addEventListener("click", () => {
+    if (window.KH7_OPEN_ADD_MENU) window.KH7_OPEN_ADD_MENU();
+    else openAddTileModal();
+  });
   elements.loginForm.addEventListener("submit", handleLogin);
   elements.tileForm.addEventListener("submit", handleTileSubmit);
   elements.tileLabel.addEventListener("input", updateSuggestedCategory);

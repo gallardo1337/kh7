@@ -31,15 +31,16 @@ let failProfile = false;
 let csrfCalls = 0;
 const markets = { XXBTZEUR: { wsname: 'XBT/EUR', altname: 'XBTEUR' }, XETHZEUR: { wsname: 'ETH/EUR', altname: 'ETHEUR' }, XXBTZUSD: { wsname: 'XBT/USD', altname: 'XBTUSD' } };
 function create() {
-  const ids = Object.fromEntries(['modules-panel', 'modules-grid', 'modules-empty', 'modules-manage'].map(id => [id, new Node('div')]));
+  const ids = Object.fromEntries(['modules-panel', 'modules-grid', 'modules-empty', 'add-tile-btn'].map(id => [id, new Node('div')]));
   ids['modules-panel'].className = 'hidden';
   const document = { body: new Node('body'), getElementById: id => ids[id], createElement: tag => new Node(tag), hidden: false };
   const events = {};
   const alerts = [];
+  let tileDialogs = 0;
   const context = {
     document, localStorage: { getItem: key => store.get(key) || null, setItem: (key, value) => store.set(key, value) },
     state: { isAdmin: false, user: null, client: { auth: { getSession: async () => ({ data: { session: { access_token: 'valid-token' } } }) } } },
-    showToast: message => alerts.push(message), AbortController, clearTimeout, setTimeout,
+    showToast: message => alerts.push(message), openAddTileModal: () => tileDialogs++, AbortController, clearTimeout, setTimeout,
     window: { setTimeout, setInterval() {}, addEventListener: (event, fn) => { events[event] = fn; } },
     fetch: async (url, options) => {
       let data; let ok = true;
@@ -58,12 +59,12 @@ function create() {
     },
   };
   vm.createContext(context); vm.runInContext(code, context);
-  return { ids, document, alerts, session: detail => events['kh7-session']({ detail }), grid: ids['modules-grid'], picker: document.body.children[0] };
+  return { ids, document, alerts, openMenu: () => context.window.KH7_OPEN_ADD_MENU(), tileDialogs: () => tileDialogs, session: detail => events['kh7-session']({ detail }), grid: ids['modules-grid'], picker: document.body.children[0] };
 }
 const flush = async () => { for (let n = 0; n < 12; n++) await Promise.resolve(); };
 const card = (app, id) => app.grid.children.find(c => c.dataset.module === id);
 const getButton = (parent, text) => parent.querySelectorAll('button').find(b => b.textContent === text);
-const enable = async (app, id) => { const check = app.picker.querySelectorAll('input').find(n => n.dataset.module === id); check.checked = true; await check.emit('change'); await flush(); };
+const enable = async (app, id) => { app.openMenu(); const item = app.picker.querySelectorAll('button').find(n => n.dataset.addModule === id); await item.emit('click'); await flush(); };
 const addCoin = async (app, symbol, amount) => {
   const form = card(app, 'crypto').querySelector('form'); const inputs = form.querySelectorAll('input'); inputs[0].value = symbol; inputs[1].value = amount; await form.emit('submit'); await flush();
 };
@@ -75,9 +76,16 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
 (async () => {
   const app = create();
   assert(app.ids['modules-panel'].classList.contains('hidden'));
+  app.openMenu(); assert(app.picker.classList.contains('hidden'));
   app.session({ isAdmin: true, userId: 'user-a' });
   assert(!app.ids['modules-panel'].classList.contains('hidden'));
+  app.openMenu(); assert(!app.picker.classList.contains('hidden'));
+  const linkChoice = app.picker.querySelectorAll('button').find(b => b.textContent.startsWith('Link-Kachel'));
+  await linkChoice.emit('click'); assert.equal(app.tileDialogs(), 1); assert(app.picker.classList.contains('hidden'));
   await enable(app, 'notes');
+  assert(app.picker.classList.contains('hidden'));
+  app.openMenu(); assert(app.picker.querySelectorAll('button').find(b => b.dataset.addModule === 'notes').disabled);
+  await enable(app, 'notes'); assert.equal(app.grid.children.length, 1);
   const notes = card(app, 'notes').querySelector('textarea'); notes.value = '<script>alert(1)</script> Meine Notiz'; await notes.emit('input');
   assert.equal(persisted().notes, notes.value);
   assert.equal(card(app, 'notes').dataset.noteColor, 'yellow');
