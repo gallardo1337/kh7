@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const code = fs.readFileSync('supabase/functions/cs2-inventory/index.ts', 'utf8');
 const id = '76561197973118581';
-const html = '<div class="value-item primary"><div class="value-details"><span class="value-label">SA Price</span><span class="value-amount">$<!-- -->10,832.52</span><span>≈ $10,932.69 for your copies</span></div></div><a class="value-item secondary">CS.Money $10,371.01</a><div>884 items</div><div>Updated 2 hours ago</div><div>Market value</div>';
+const html = '<img class="profile-avatar" src="https://avatars.steamstatic.com/abcd_full.jpg"><div class="value-item primary"><div class="value-details"><span class="value-label">SA Price</span><span class="value-amount">$<!-- -->10,832.52</span><span>≈ $10,932.69 for your copies</span></div></div><a class="value-item secondary">CS.Money $10,371.01</a><div>884 items</div><div>Updated 2 hours ago</div><div>Market value</div>';
 function setup(options = {}) {
  let handler, pageCalls = 0;
  const context = { Request, Response, AbortSignal, fetch: async url => {
@@ -22,6 +22,8 @@ function setup(options = {}) {
  assert.equal((await setup().call('https://evil.test/')).status, 400);
  const good = setup(); const response = await good.call(); const result = await response.json();
  assert.equal(response.status, 200); assert.equal(result.total, 9749.27); assert.equal(result.currency, 'EUR'); assert.equal(result.itemCount, 884); assert.equal(result.sourceUpdated, '2 hours ago');
+ assert.equal(result.avatarURL, 'https://avatars.steamstatic.com/abcd_full.jpg');
+ assert.equal(good.parse(html.replace('https://avatars.steamstatic.com/abcd_full.jpg', 'https://evil.test/abcd.jpg')).avatarURL, null);
  assert.equal(result.source, 'SteamAnalyst SA Price'); await good.call(); assert.equal(good.count(), 1);
  assert.equal((await setup({ status: 429 }).call()).status, 429);
  assert.equal((await setup({ html: '<h1>Protection</h1>' }).call()).status, 502);

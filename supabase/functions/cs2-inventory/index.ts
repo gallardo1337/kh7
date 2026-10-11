@@ -50,7 +50,7 @@ async function inventoryHandler(req) {
       if (!fx.response.ok || !Number.isFinite(fx.data.rate) || fx.data.rate <= 0) throw new InventoryError("Euro-Wechselkurs momentan nicht verfügbar. Bitte später erneut versuchen.");
       rate = fx.data.rate; rateDate = fx.data.date;
     }
-    const result = { total: Math.round(parsed.total * rate * 100) / 100, totalUSD: parsed.total, rateDate, itemCount: parsed.itemCount, unpricedCount: 0, currency, source: "SteamAnalyst SA Price", updatedAt: new Date().toISOString(), sourceUpdated: parsed.sourceUpdated, sourceURL: url };
+    const result = { total: Math.round(parsed.total * rate * 100) / 100, totalUSD: parsed.total, avatarURL: parsed.avatarURL, rateDate, itemCount: parsed.itemCount, unpricedCount: 0, currency, source: "SteamAnalyst SA Price", updatedAt: new Date().toISOString(), sourceUpdated: parsed.sourceUpdated, sourceURL: url };
     if (resultCache.size > 100) resultCache.clear();
     resultCache.set(cacheKey, { value: result, expires: Date.now() + 600000 });
     return reply(result);
@@ -71,6 +71,9 @@ function parseSAValue(html) {
   const text = html.replace(/<!--.*?-->/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
   const items = text.match(/\b([0-9,]+)\s+items\b/i);
   const updated = text.match(/Updated\s+([^<]{1,60}?)(?=Market value|Sell now|Insights|Alerts|$)/i);
-  return { total, itemCount: items ? Number(items[1].replaceAll(",", "")) : 0, sourceUpdated: updated ? updated[1].trim() : null };
+  const avatarTag = html.match(/<img\b[^>]*class=["'][^"']*\bprofile-avatar\b[^"']*["'][^>]*>/i);
+  const avatarSrc = avatarTag?.[0].match(/\bsrc=["']([^"']+)["']/i)?.[1];
+  const avatarURL = avatarSrc && /^https:\/\/avatars(?:\.fastly|\.akamai)?\.steamstatic\.com\/[a-f0-9]+(?:_full|_medium)?\.jpg$/i.test(avatarSrc) ? avatarSrc : null;
+  return { total, avatarURL, itemCount: items ? Number(items[1].replaceAll(",", "")) : 0, sourceUpdated: updated ? updated[1].trim() : null };
 }
 Deno.serve(inventoryHandler);

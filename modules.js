@@ -452,12 +452,23 @@
     inventoryValues.replaceChildren();
     if (!visible) return;
     if (!settings.profiles.length) {
-      inventoryValues.append(button("CS2 —", () => { inventoryOpen = true; render(); }));
+      inventoryValues.append(button("Account hinzufügen", () => { inventoryOpen = true; render(); }));
       return;
     }
     for (const profile of settings.profiles) {
       const result = inventories.get(profile.profile);
-      const value = el("a", `${profile.label} · CS2 ${result ? (result.unpricedCount ? "≈ " : "") + inventoryMoney(result.total, result.currency) : "—"}`, "portfolio-info");
+      const value = el("a", "", "portfolio-info inventory-badge");
+      const avatar = el("span", "", "inventory-avatar");
+      avatar.setAttribute("aria-hidden", "true");
+      const fallback = el("span", "●", "inventory-avatar-fallback");
+      avatar.append(fallback);
+      if (result?.avatarURL && /^https:\/\/avatars(?:\.fastly|\.akamai)?\.steamstatic\.com\/[a-f0-9]+(?:_full|_medium)?\.jpg$/i.test(result.avatarURL)) {
+        const image = el("img"); image.src = result.avatarURL; image.alt = ""; image.referrerPolicy = "no-referrer";
+        image.addEventListener("load", () => fallback.classList.add("hidden"));
+        image.addEventListener("error", () => { image.classList.add("hidden"); fallback.classList.remove("hidden"); });
+        avatar.append(image);
+      }
+      value.append(avatar, el("span", result ? (result.unpricedCount ? "≈ " : "") + inventoryMoney(result.total, result.currency) : "—", "inventory-amount"));
       value.dataset.inventoryProfile = profile.profile;
       const href = steamAnalystURL(profile.profile);
       if (href) { value.href = href; value.target = "_blank"; value.rel = "noopener noreferrer"; }

@@ -111,3 +111,9 @@
 .dashboard-status-row { flex-wrap: wrap; }
 .inventory-values { flex-wrap: wrap; }
 .inventory-values .portfolio-info { font-size: .9rem; }
+
+.inventory-badge { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 5px; }
+.inventory-avatar { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex: 0 0 28px; border-radius: 50%; overflow: hidden; background: #353535; }
+.inventory-avatar img { position: absolute; width: 100%; height: 100%; object-fit: cover; }
+.inventory-avatar-fallback { color: #8d8d8d; font-size: 18px; }
+.inventory-amount { white-space: nowrap; }
