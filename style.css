@@ -715,3 +715,6 @@ body.admin-mode .tile[draggable="true"]:active { cursor: grabbing; }
     transition-duration: 0.01ms !important;
   }
 }
+
+#header-date { font-size: .95rem; color: #fff; opacity: .75; white-space: nowrap; user-select: none; }
+@media (max-width: 600px) { #header-date { font-size: .75rem; } }

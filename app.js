@@ -45,6 +45,7 @@ const elements = {
   lockButton: document.getElementById("lock-btn"),
   addTileButton: document.getElementById("add-tile-btn"),
   clock: document.getElementById("clock"),
+  headerDate: document.getElementById("header-date"),
   loginModal: document.getElementById("login-modal"),
   loginForm: document.getElementById("login-form"),
   loginEmail: document.getElementById("login-email"),
@@ -107,6 +108,7 @@ function updateClock() {
   const hours = String(now.getHours()).padStart(2, "0");
   const minutes = String(now.getMinutes()).padStart(2, "0");
   elements.clock.textContent = `${hours}:${minutes}`;
+  elements.headerDate.textContent = `${now.toLocaleDateString("de-DE", { weekday: "long" })}, ${now.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}`;
 }
 
 function weatherIcon(code) {
