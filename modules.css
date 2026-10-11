@@ -83,3 +83,9 @@
 @media (min-width: 1101px) and (max-width: 1750px) {
   body:has(.notes-dock:not(.hidden)) .dashboard-layout { margin-left: 314px; margin-right: 24px; max-width: none; padding-left: 0; }
 }
+
+.notes-dock { display: grid; gap: 18px; }
+.sticky-note .module-heading h3 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sticky-note .module-heading .module-button { flex-shrink: 0; font-size: .78rem; padding: 6px 8px; }
+.module-card.note-collapsed { padding-bottom: 20px; }
+.note-collapsed .module-heading { margin-bottom: 0; }

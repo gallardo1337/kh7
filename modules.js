@@ -3,7 +3,7 @@
 // Each module owns its renderer; new modules only need a catalog entry and renderer.
 (() => {
   const catalog = [
-    { id: "notes", title: "Notizen", description: "Gedanken festhalten. Wird beim Schreiben gespeichert.", render: renderNotes },
+    { id: "notes", title: "Notizen", description: "Eine neue Haftnotiz mit eigener Farbe hinzufügen.", render: renderNotes },
     { id: "crypto", title: "Krypto-Portfolio", description: "Eigene Coins und Mengen, aktuelle Kurse und Gesamtwert.", render: renderCrypto },
     { id: "cs2", title: "CS2-Inventare", description: "Mehrere Steam-Profile und ihre geschätzten Inventarwerte.", render: renderCS2 },
   ];
@@ -32,7 +32,7 @@
   let cryptoTime = null;
   const noteColors = [["yellow", "Gelb"], ["pink", "Rosa"], ["blue", "Blau"], ["green", "Grün"], ["purple", "Lila"]];
 
-  function defaults() { return { enabled: [], notes: "", noteColor: "yellow", currency: "EUR", holdings: [], profiles: [], valuation: "steam" }; }
+  function defaults() { return { enabled: [], notes: "", noteColor: "yellow", noteItems: [], currency: "EUR", holdings: [], profiles: [], valuation: "steam" }; }
   function el(tag, text, className) {
     const node = document.createElement(tag);
     if (text !== undefined) node.textContent = text;
@@ -56,8 +56,7 @@
   }
   function updateNoteStatus(text) {
     noteStatus = text;
-    const status = notesDock.querySelector("[data-note-status]");
-    if (status) status.textContent = text;
+    notesDock.querySelectorAll("[data-note-status]").forEach(status => { status.textContent = text; });
   }
   function queueNoteSave() {
     updateNoteStatus(cloudReady ? "Wird in deinem Konto gespeichert …" : "Notiz wird synchronisiert …");
@@ -70,7 +69,7 @@
     const epoch = sessionEpoch;
     const revision = noteRevision;
     const client = state.client;
-    const payload = { user_id: userId, content: settings.notes, color: settings.noteColor, enabled: settings.enabled.includes("notes"), updated_at: new Date().toISOString() };
+    const payload = { user_id: userId, content: settings.noteItems[0]?.content || "", color: settings.noteItems[0]?.color || "yellow", note_items: settings.noteItems.map(note => ({ ...note })), enabled: settings.enabled.includes("notes"), updated_at: new Date().toISOString() };
     cloudWrites = cloudWrites.catch(() => {}).then(async () => {
       if (epoch !== sessionEpoch) return;
       try {
@@ -86,23 +85,34 @@
     const epoch = sessionEpoch;
     const revision = noteRevision;
     try {
-      const result = await state.client.from("dashboard_notes").select("content,color,enabled").eq("user_id", userId).maybeSingle();
+      const result = await state.client.from("dashboard_notes").select("content,color,enabled,note_items").eq("user_id", userId).maybeSingle();
       if (epoch !== sessionEpoch) return;
       if (result.error) throw result.error;
       cloudReady = true;
       if (revision === noteRevision && !noteDirty && result.data) {
+        settings.noteItems = normalizeNotes(result.data);
         settings.notes = result.data.content;
         settings.noteColor = noteColors.some(([color]) => color === result.data.color) ? result.data.color : "yellow";
         settings.enabled = settings.enabled.filter(id => id !== "notes");
         if (result.data.enabled) settings.enabled.push("notes");
         noteDirty = false;
         save(); updateNoteStatus("Aus deinem Konto geladen"); render();
-      } else if (noteDirty || settings.notes || settings.enabled.includes("notes")) {
+      } else if (noteDirty || settings.noteItems.length || settings.enabled.includes("notes")) {
         noteDirty = true; queueNoteSave();
       } else updateNoteStatus("Wird automatisch in deinem Konto gespeichert");
     } catch {
       if (epoch === sessionEpoch) updateNoteStatus("Cloud nicht erreichbar · bitte später erneut versuchen.");
     }
+  }
+  function newNoteId() { return window.crypto?.randomUUID?.() || `note-${Date.now()}-${Math.random().toString(36).slice(2)}`; }
+  function normalizeNotes(data) {
+    const source = Array.isArray(data.note_items) ? data.note_items : Array.isArray(data.noteItems) ? data.noteItems : (data.content || data.notes || data.enabled === true || data.enabled?.includes?.("notes")) ? [{ id: "legacy-note", content: data.content ?? data.notes, color: data.color ?? data.noteColor }] : [];
+    const ids = new Set();
+    return source.slice(0, 50).filter(note => note && typeof note === "object").map(note => {
+      let id = typeof note.id === "string" && /^[a-zA-Z0-9-]{1,80}$/.test(note.id) && !ids.has(note.id) ? note.id : newNoteId();
+      ids.add(id);
+      return { id, content: typeof note.content === "string" ? note.content.slice(0, 20000) : "", color: noteColors.some(([key]) => key === note.color) ? note.color : "yellow", collapsed: note.collapsed === true };
+    });
   }
   function load() {
     try {
@@ -112,6 +122,7 @@
         enabled: [...new Set(Array.isArray(data.enabled) ? data.enabled.filter(id => catalog.some(item => item.id === id)) : [])],
         notes: typeof data.notes === "string" ? data.notes.slice(0, 20000) : "",
         noteColor: noteColors.some(([key]) => key === data.noteColor) ? data.noteColor : "yellow",
+        noteItems: normalizeNotes(data),
         notesPending: Boolean(data.notesPending),
         currency: ["EUR", "USD"].includes(data.currency) ? data.currency : "EUR",
         holdings: Array.isArray(data.holdings) ? data.holdings.filter(h => h && /^[A-Z0-9]{1,15}$/.test(h.symbol) && Number.isFinite(h.amount) && h.amount > 0).slice(0, 30) : [],
@@ -176,6 +187,14 @@
     if (!userId) return;
     for (const id of settings.enabled) {
       const module = catalog.find(item => item.id === id);
+      if (id === "notes") {
+        settings.noteItems.forEach((note, index) => {
+          const card = el("article", undefined, "module-card");
+          card.dataset.module = "notes"; card.dataset.noteId = note.id;
+          renderNotes(card, note, index); notesDock.append(card);
+        });
+        continue;
+      }
       const card = el("article", undefined, "module-card");
       card.dataset.module = id;
       const heading = el("div", undefined, "module-heading");
@@ -189,15 +208,29 @@
       (id === "notes" ? notesDock : id === "crypto" ? portfolioPanel : grid).append(card);
     }
   }
-  function renderNotes(card) {
+  function renderNotes(card, note, index) {
+    const heading = el("div", undefined, "module-heading");
+    const title = el("h3", `Notiz ${index + 1}`);
+    const body = el("div", undefined, "note-content"); body.id = `note-body-${note.id}`;
+    const toggle = button("", () => { note.collapsed = !note.collapsed; updateCollapsed(); save(true); });
+    toggle.dataset.noteToggle = "";
+    toggle.setAttribute("aria-controls", body.id);
+    function updateCollapsed() {
+      body.classList.toggle("hidden", note.collapsed);
+      card.classList.toggle("note-collapsed", note.collapsed);
+      toggle.textContent = note.collapsed ? "Aufklappen" : "Zuklappen";
+      toggle.setAttribute("aria-expanded", String(!note.collapsed));
+      title.textContent = note.collapsed && note.content.trim() ? note.content.trim().split("\n")[0] : `Notiz ${index + 1}`;
+    }
+    heading.append(title, toggle); card.append(heading, body); updateCollapsed();
     card.classList.add("sticky-note");
-    card.dataset.noteColor = settings.noteColor;
+    card.dataset.noteColor = note.color;
     const palette = el("div", undefined, "note-palette");
     palette.setAttribute("role", "group");
     palette.setAttribute("aria-label", "Notizfarbe");
     for (const [color, name] of noteColors) {
       const swatch = button("", () => {
-        settings.noteColor = color;
+        note.color = color;
         card.dataset.noteColor = color;
         palette.querySelectorAll("button").forEach(item => item.setAttribute("aria-pressed", String(item.dataset.color === color)));
         save(true);
@@ -206,23 +239,23 @@
       swatch.dataset.color = color;
       swatch.title = name;
       swatch.setAttribute("aria-label", `Notizfarbe ${name}`);
-      swatch.setAttribute("aria-pressed", String(settings.noteColor === color));
+      swatch.setAttribute("aria-pressed", String(note.color === color));
       palette.append(swatch);
     }
     const input = el("textarea");
-    input.setAttribute("aria-label", "Meine Notizen");
+    input.setAttribute("aria-label", `Notiz ${index + 1}`);
     input.placeholder = "Was möchtest du festhalten?";
     input.maxLength = 20000;
-    input.value = settings.notes;
+    input.value = note.content;
     const status = el("p", noteStatus, "module-muted");
     status.dataset.noteStatus = "";
     status.setAttribute("aria-live", "polite");
     input.addEventListener("input", () => {
-      settings.notes = input.value;
+      note.content = input.value;
       save(true);
     });
-    card.append(palette, input, status);
-    card.append(button("Synchronisieren", () => { if (cloudReady) { noteDirty = true; queueNoteSave(); } else loadCloudNotes(); }));
+    body.append(palette, input, status);
+    body.append(button("Synchronisieren", () => { if (cloudReady) { noteDirty = true; queueNoteSave(); } else loadCloudNotes(); }));
   }
   function field(form, label, input) {
     const wrapper = el("label", label);
@@ -440,9 +473,10 @@
   });
   for (const module of catalog) {
     const item = addChoice(module.title, module.description, () => {
-      if (!userId || settings.enabled.includes(module.id)) return;
+      if (!userId || (module.id === "notes" ? settings.noteItems.length >= 50 : settings.enabled.includes(module.id))) return;
       generation++; cancelRequests(); cryptoBusy = false; inventoryBusy = false;
-      settings.enabled.push(module.id);
+      if (!settings.enabled.includes(module.id)) settings.enabled.push(module.id);
+      if (module.id === "notes") settings.noteItems.push({ id: newNoteId(), content: "", color: "yellow", collapsed: false });
       save(module.id === "notes");
       if (module.id === "crypto") portfolioOpen = true;
       render(); closePicker();
@@ -450,14 +484,14 @@
     });
     item.dataset.addModule = module.id;
   }
-  content.append(list); message(content, "Notiztext und Farbe werden in deinem Konto gespeichert. Portfolio-Mengen und Profillisten bleiben in diesem Browser."); content.append(button("Fertig", closePicker)); picker.append(backdrop, content); document.body.append(picker);
+  content.append(list); message(content, "Notizen, Farben und Klappzustände werden in deinem Konto gespeichert. Portfolio-Mengen und Profillisten bleiben in diesem Browser."); content.append(button("Fertig", closePicker)); picker.append(backdrop, content); document.body.append(picker);
   function closePicker() { picker.classList.add("hidden"); document.getElementById("add-tile-btn").focus(); }
   window.KH7_OPEN_ADD_MENU = () => {
     if (!userId) return;
     list.querySelectorAll("[data-add-module]").forEach(item => {
-      item.disabled = settings.enabled.includes(item.dataset.addModule);
+      item.disabled = item.dataset.addModule === "notes" ? settings.noteItems.length >= 50 : settings.enabled.includes(item.dataset.addModule);
       const module = catalog.find(value => value.id === item.dataset.addModule);
-      item.querySelector("span").textContent = item.disabled ? "Bereits auf deinem Dashboard hinzugefügt" : module.description;
+      item.querySelector("span").textContent = item.disabled ? (module.id === "notes" ? "Maximal 50 Notizen sind möglich" : "Bereits auf deinem Dashboard hinzugefügt") : module.description;
     });
     picker.classList.remove("hidden"); list.querySelector("button").focus();
   };
