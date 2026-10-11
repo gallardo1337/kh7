@@ -31,7 +31,9 @@ async function inventoryHandler(req) {
     if (!body || typeof body !== "object") return reply({ error: "Ungültige Anfrage." }, 400);
     const steamId = typeof body.profile === "string" ? body.profile.replace(/^https:\/\/steamcommunity\.com\/profiles\//, "").replace(/\/$/, "") : "";
     if (!/^765\d{14}$/.test(steamId)) return reply({ error: "Bitte eine SteamID64 oder einen SteamAnalyst-Inventarlink eintragen." }, 400);
-    const cacheKey = steamId;
+    const currency = body.currency || "EUR";
+    if (!["EUR", "USD"].includes(currency)) return reply({ error: "Ungültige Währung." }, 400);
+    const cacheKey = `${steamId}:${currency}`;
     const cached = resultCache.get(cacheKey);
     if (cached && cached.expires > Date.now()) return reply(cached.value);
     const url = `https://www.steamanalyst.com/inventory/${steamId}`;
@@ -42,7 +44,13 @@ async function inventoryHandler(req) {
     if (html.length > 8000000) throw new InventoryError("SteamAnalyst-Antwort ist zu groß.");
     const parsed = parseSAValue(html);
     if (!parsed) throw new InventoryError("SA Price konnte auf der SteamAnalyst-Seite nicht erkannt werden. Der Anbieter liefert möglicherweise eine Schutzseite oder lädt den Wert nur im Browser.");
-    const result = { total: parsed.total, itemCount: parsed.itemCount, unpricedCount: 0, currency: "USD", source: "SteamAnalyst SA Price", updatedAt: new Date().toISOString(), sourceUpdated: parsed.sourceUpdated, sourceURL: url };
+    let rate = 1, rateDate = null;
+    if (currency === "EUR") {
+      const fx = await readJSON("https://api.frankfurter.dev/v2/providers/ecb/rate/usd/eur");
+      if (!fx.response.ok || !Number.isFinite(fx.data.rate) || fx.data.rate <= 0) throw new InventoryError("Euro-Wechselkurs momentan nicht verfügbar. Bitte später erneut versuchen.");
+      rate = fx.data.rate; rateDate = fx.data.date;
+    }
+    const result = { total: Math.round(parsed.total * rate * 100) / 100, totalUSD: parsed.total, rateDate, itemCount: parsed.itemCount, unpricedCount: 0, currency, source: "SteamAnalyst SA Price", updatedAt: new Date().toISOString(), sourceUpdated: parsed.sourceUpdated, sourceURL: url };
     if (resultCache.size > 100) resultCache.clear();
     resultCache.set(cacheKey, { value: result, expires: Date.now() + 600000 });
     return reply(result);

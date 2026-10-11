@@ -9,18 +9,19 @@ function setup(options = {}) {
  const context = { Request, Response, AbortSignal, fetch: async url => {
   if (url.endsWith('/auth/v1/user')) return Response.json({ id: '11111111-1111-1111-1111-111111111111' });
   if (url.endsWith('/rpc/inventory_authorized')) return Response.json(!options.denied);
+  if(url.includes('frankfurter')) return Response.json({rate:0.9,date:'2026-10-09'});
   assert.equal(url, `https://www.steamanalyst.com/inventory/${id}`); pageCalls++;
   return new Response(options.html ?? html, { status: options.status ?? 200 });
  }, Deno: { serve: fn => handler = fn, env: { get: name => { assert.equal(name, 'SUPABASE_URL'); return 'https://test.supabase.co'; } } } };
  vm.createContext(context); vm.runInContext(code, context);
- return { parse: context.parseSAValue, count: () => pageCalls, call: (profile = id, token = 'Bearer '+ 'a'.repeat(30)) => handler(new Request('https://example.test', { method: 'POST', headers: token ? { Authorization: token } : {}, body: JSON.stringify({ profile }) })) };
+ return { parse: context.parseSAValue, count: () => pageCalls, call: (profile = id, token = 'Bearer '+ 'a'.repeat(30)) => handler(new Request('https://example.test', { method: 'POST', headers: token ? { Authorization: token } : {}, body: JSON.stringify({ profile, currency:'EUR' }) })) };
 }
 (async () => {
  assert.equal((await setup().call(id, '')).status, 401);
  const denied = setup({ denied: true }); assert.equal((await denied.call()).status, 403); assert.equal(denied.count(), 0);
  assert.equal((await setup().call('https://evil.test/')).status, 400);
  const good = setup(); const response = await good.call(); const result = await response.json();
- assert.equal(response.status, 200); assert.equal(result.total, 10832.52); assert.equal(result.currency, 'USD'); assert.equal(result.itemCount, 884); assert.equal(result.sourceUpdated, '2 hours ago');
+ assert.equal(response.status, 200); assert.equal(result.total, 9749.27); assert.equal(result.currency, 'EUR'); assert.equal(result.itemCount, 884); assert.equal(result.sourceUpdated, '2 hours ago');
  assert.equal(result.source, 'SteamAnalyst SA Price'); await good.call(); assert.equal(good.count(), 1);
  assert.equal((await setup({ status: 429 }).call()).status, 429);
  assert.equal((await setup({ html: '<h1>Protection</h1>' }).call()).status, 502);

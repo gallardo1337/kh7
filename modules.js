@@ -471,9 +471,9 @@
     }
   }
 
-  function inventoryMoney(value, currency = "USD") { return new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(value); }
+  function inventoryMoney(value, currency = "EUR") { return new Intl.NumberFormat("de-DE", { style: "currency", currency }).format(value); }
   function renderCS2(card) {
-    message(card, "SA Price direkt von der verlinkten SteamAnalyst-Seite · US-Dollar.");
+    message(card, "SA Price direkt von der verlinkten SteamAnalyst-Seite · Euro, umgerechnet zum EZB-Referenzkurs.");
     const available = settings.profiles.filter(p => inventories.has(p.profile));
     const total = available.reduce((sum, p) => sum + inventories.get(p.profile).total, 0);
     card.append(el("div", available.length ? inventoryMoney(total) : "—", "module-big-value"));
@@ -532,7 +532,7 @@
         try {
           const result = await json(`${window.KH7_CONFIG.supabaseUrl}/functions/v1/cs2-inventory`, {
             method: "POST", headers: { "Content-Type": "application/json", apikey: window.KH7_CONFIG.supabasePublishableKey, Authorization: `Bearer ${session.data.session.access_token}` },
-            body: JSON.stringify({ profile: profile.profile, currency: "USD" }),
+            body: JSON.stringify({ profile: profile.profile, currency: "EUR" }),
           });
           if (current !== generation) return;
           if (!Number.isFinite(result.total) || result.total < 0 || !Number.isFinite(result.itemCount) || !Number.isFinite(result.unpricedCount) || !Number.isFinite(Date.parse(result.updatedAt))) throw new Error("Ungültige Inventarantwort.");

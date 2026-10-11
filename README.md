@@ -27,7 +27,7 @@ Die Haftnotizen stehen links unter dem Wetter oder rechts neben den Kacheln. Am 
 
 Rechts neben dem Portfolio steht für jedes gespeicherte Profil eine eigene CS2-Anzeige mit Profilname und Wert. Die Anzeigen stehen nebeneinander und brechen bei wenig Platz um. Ein Klick auf den Wert öffnet dessen SteamAnalyst-Inventar in einem neuen Tab. Jede Anzeige verlinkt direkt das zugehörige SteamAnalyst-Inventar. Das Zahnrad öffnet die Profilverwaltung und Bewertung. Der Direktlink benötigt eine SteamID64 oder einen numerischen /profiles/-Link; bei benutzerdefinierten /id/-Links wird zunächst die Verwaltung geöffnet. Vor dem ersten erfolgreichen Abruf zeigt KH7 „—“. SteamAnalyst kann trotzdem direkt geöffnet werden.
 
-CS2 übernimmt ausschließlich den SA Price-Gesamtwert von der verlinkten SteamAnalyst-Inventarseite. Der Server liest das als SA Price gekennzeichnete value-amount-Feld; CS.Money und Premium-Schätzungen werden ignoriert. Der Wert erscheint wie auf SteamAnalyst in USD. Es gibt keine Einzelpreisberechnung und keinen Dateiimport mehr. Der SteamAnalyst-Stand wird angezeigt, wenn er auf der Seite erkennbar ist. Webseitenabrufe werden zehn Minuten zwischengespeichert. Der vorhandene API-Key wird hierfür nicht benötigt und bleibt unveröffentlicht in Supabase Secrets.
+CS2 übernimmt ausschließlich den SA Price-Gesamtwert von der verlinkten SteamAnalyst-Inventarseite. Der Server liest das als SA Price gekennzeichnete value-amount-Feld; CS.Money und Premium-Schätzungen werden ignoriert. Der Wert erscheint wie auf SteamAnalyst in EUR zum EZB-Referenzkurs. Es gibt keine Einzelpreisberechnung und keinen Dateiimport mehr. Der SteamAnalyst-Stand wird angezeigt, wenn er auf der Seite erkennbar ist. Webseitenabrufe werden zehn Minuten zwischengespeichert. Der vorhandene API-Key wird hierfür nicht benötigt und bleibt unveröffentlicht in Supabase Secrets.
 
 Der Dienst cs2-inventory ist im bestehenden Supabase-Projekt bereitgestellt. Er prüft Benutzer und aktive Admin-Sitzung, erlaubt nur feste SteamAnalyst-Inventar-URLs aus numerischen SteamIDs und ruft keine frei eingegebenen URLs ab. Änderungen am Seitenaufbau oder Schutzseiten ergeben einen Fehler statt eines geratenen Werts. Die alten Preis- und Budgettabellen sowie die PHP-Alternative werden von diesem Dienst nicht mehr verwendet.
 
@@ -38,4 +38,3 @@ Der Dienst cs2-inventory ist im bestehenden Supabase-Projekt bereitgestellt. Er 
 ## Hostinger-Veröffentlichung
 
 Die statischen Webdateien werden direkt in `public_html` entpackt. Die enthaltene `.htaccess` setzt `index.html` als Startseite. Vorhandene Verzeichnisse wie `public_html/uploads` bleiben dabei unverändert und dürfen beim Hochladen nicht gelöscht werden.
-
