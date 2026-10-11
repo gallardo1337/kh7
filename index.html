@@ -89,7 +89,7 @@
     <button id="lock-btn" class="header-icon-btn" type="button" title="Anmelden" aria-label="Anmelden">🔒</button>
   </div>
 
-  <button class="version-info" id="version-info" type="button">v2.1.2</button>
+  <button class="version-info" id="version-info" type="button">v2.2.0</button>
 
   <div id="login-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="login-title">
     <button class="modal-bg" type="button" data-close-modal aria-label="Schließen"></button>
@@ -151,6 +151,20 @@
         <button type="button" class="close-btn" data-close-modal aria-label="Schließen">&times;</button>
       </div>
       <div class="modal-body">
+        <div class="changelog-block">
+          <div class="changelog-version">v2.2.0 · 11.10.2026</div>
+          <div class="changelog-details">
+            Über das ＋ oben zwischen Link-Kachel, Notizen, Krypto-Portfolio und CS2-Inventaren wählen.<br>
+            Mehrere farbige Haftnotizen erstellen und einzeln zu- und aufklappen. Text, Farbe, Klappzustand und Position werden im Konto gespeichert; bestehende Notizen bleiben erhalten.<br>
+            Haftnotizen per Drag-and-drop links oder rechts neben den Kacheln platzieren und ihre Reihenfolge ändern. Der Griff unterstützt auch Seitenwechsel per Klick und Pfeiltasten.<br>
+            Eigene Coins und Mengen eintragen: aktuelle Kraken-Kurse berechnen den Portfolio-Gesamtwert rechts neben dem Wetter. Ein Klick zeigt alle Coins und ihre Werte; EUR und USD sowie Dezimalkomma werden unterstützt.<br>
+            Mehrere CS2-Profile mit eigenen Anzeigen nebeneinander rechts vom Portfolio. Jede Anzeige öffnet den passenden SteamAnalyst-Account; Profile werden über das Zahnrad verwaltet.<br>
+            SteamAnalyst-Inventarlinks, SteamID64 und Steam-Profillinks werden akzeptiert. HTTP-Steam-Links werden automatisch auf HTTPS umgestellt.<br>
+            CS2-Anzeigen übernehmen den SA Price direkt von der verlinkten SteamAnalyst-Seite in USD, mit zehn Minuten Zwischenspeicherung. Dateiimport und separate Einzelpreisberechnung entfallen.<br>
+            Geschützter Serverabruf über Supabase mit Prüfung der aktiven Admin-Sitzung. Verständliche Fehlermeldungen bei nicht erreichbaren Datenquellen; vorhandene Inventarwerte bleiben bei Fehlern sichtbar.<br>
+            Portfolio und CS2-Verwaltung öffnen als kompakte Panels. Notizen und Module passen sich auch kleineren Bildschirmen an.
+          </div>
+        </div>
         <div class="changelog-block">
           <div class="changelog-version">v2.1.2</div>
           <div class="changelog-details">Alle allgemeinen Akzente bleiben auch nach der Anmeldung grün.</div>
