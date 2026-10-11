@@ -90,7 +90,7 @@
     <button id="lock-btn" class="header-icon-btn" type="button" title="Anmelden" aria-label="Anmelden">🔒</button>
   </div>
 
-  <button class="version-info" id="version-info" type="button">v2.8.1</button>
+  <button class="version-info" id="version-info" type="button">v2.9.0</button>
 
   <div id="login-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="login-title">
     <button class="modal-bg" type="button" data-close-modal aria-label="Schließen"></button>
@@ -172,6 +172,10 @@
         <button type="button" class="close-btn" data-close-modal aria-label="Schließen">&times;</button>
       </div>
       <div class="modal-body">
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.9.0</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">BVB-Modul über das ＋-Menü hinzufügen: die nächsten fünf Spiele und die aktuelle Bundesliga-Tabelle mit hervorgehobenem BVB rechts neben den Kacheln. Daten von OpenLigaDB, automatische Aktualisierung alle 15 Minuten bei geöffnetem Dashboard und manueller Abruf. Aktivierung wird online im Konto gespeichert.</div>
+        </div>
         <div class="changelog-block">
           <div class="changelog-version"><span>v2.8.1</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
           <div class="changelog-details">Gesetzliche Feiertage im Kalender automatisch markieren: bundesweite Feiertage und zusätzlich in NRW geltende Feiertage mit eigenen Farben. Ein Klick zeigt Name und Geltungsbereich; bewegliche Feiertage werden für jedes Jahr berechnet.</div>
@@ -270,6 +274,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js" integrity="sha384-yiVMs0R/Jyz7OhoXa/DsEMUSBLjEhr/QJta2ONO+zB6I8/GmNg/7AUFrZmAJV7KV" crossorigin="anonymous"></script>
   <script src="config.js"></script>
   <script src="app.js" defer></script>
+  <script src="bvb.js" defer></script>
   <script src="modules.js" defer></script>
   <script src="holidays.js" defer></script>
   <script src="calendar.js" defer></script>

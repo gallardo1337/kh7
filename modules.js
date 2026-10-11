@@ -3,6 +3,7 @@
 // Each module owns its renderer; new modules only need a catalog entry and renderer.
 (() => {
   const catalog = [
+    { id: "bvb", title: "BVB", description: "Nächste Spiele und aktuelle Bundesliga-Tabelle.", render: renderBVB },
     { id: "notes", title: "Notizen", description: "Eine neue Haftnotiz mit eigener Farbe hinzufügen.", render: renderNotes },
     { id: "crypto", title: "Krypto-Portfolio", description: "Eigene Coins und Mengen, aktuelle Kurse und Gesamtwert.", render: renderCrypto },
     { id: "cs2", title: "CS2-Inventare", description: "Mehrere Steam-Profile und ihre geschätzten Inventarwerte.", render: renderCS2 },
@@ -214,11 +215,12 @@
     notesDock.replaceChildren(); rightNotesDock.replaceChildren(); portfolioPanel.replaceChildren(); inventoryPanel.replaceChildren();
     const showNotes = Boolean(userId && cloudReady && settings.enabled.includes("notes"));
     const showPortfolio = Boolean(userId && cloudReady && settings.enabled.includes("crypto"));
-    panel.classList.add("hidden");
+    const showBVB = Boolean(userId && cloudReady && settings.enabled.includes("bvb"));
+    panel.classList.toggle("hidden", !showBVB);
     notesDock.classList.toggle("hidden", !showNotes || !settings.noteItems.some(note => note.side !== "right"));
     const showRightNotes = showNotes && settings.noteItems.some(note => note.side === "right");
     rightNotesDock.classList.toggle("hidden", !showRightNotes);
-    rightRail.classList.toggle("hidden", !showRightNotes);
+    rightRail.classList.toggle("hidden", !showRightNotes && !showBVB);
     renderInventoryHeader();
     portfolioButton.classList.toggle("hidden", !showPortfolio);
     portfolioPanel.classList.toggle("hidden", !showPortfolio || !portfolioOpen);
@@ -249,9 +251,10 @@
       }));
       card.append(heading);
       module.render(card);
-      (id === "notes" ? notesDock : id === "crypto" ? portfolioPanel : inventoryPanel).append(card);
+      (id === "bvb" ? grid : id === "notes" ? notesDock : id === "crypto" ? portfolioPanel : inventoryPanel).append(card);
     }
   }
+  function renderBVB(card) { const content = el("div"); content.dataset.bvbContent = ""; card.append(content); window.KH7_RENDER_BVB(content); }
   function renderNotes(card, note, index) {
     const heading = el("div", undefined, "module-heading");
     const handle = button("⠿", () => moveNote(note.id, note.side === "right" ? "left" : "right"));

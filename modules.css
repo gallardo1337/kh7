@@ -182,3 +182,12 @@
 .portfolio-panel.portfolio-summary:has(.value-history) { width: 320px; }
 
 #calendar-event-birthday { width: auto; margin-right: .5rem; accent-color: #80ff00; }
+
+.module-card[data-module="bvb"] { border-top: 3px solid #f5d328; padding: 14px; }
+.bvb-match { padding: 9px 0; border-bottom: 1px solid #ffffff18; }
+.bvb-match p { margin: 5px 0; }
+.bvb-match small { color: #aaa; }
+.bvb-table { width: 100%; border-collapse: collapse; font-size: .75rem; margin-bottom: 16px; }
+.bvb-table th, .bvb-table td { padding: 6px 3px; text-align: right; border-bottom: 1px solid #ffffff12; }
+.bvb-table th:nth-child(2), .bvb-table td:nth-child(2) { text-align: left; overflow-wrap: anywhere; }
+.bvb-table .bvb-highlight { color: #f5d328; background: #f5d32815; font-weight: bold; }
