@@ -21,6 +21,11 @@
   const inventoryPanel = document.getElementById("inventory-panel");
   let inventoryOpen = false;
   let portfolioOpen = false;
+  let cryptoSettingsOpen = false;
+  const cryptoSettings = el("button", "⚙", "module-button inventory-picker-settings hidden");
+  cryptoSettings.type = "button"; cryptoSettings.dataset.manageCrypto = "";
+  cryptoSettings.title = "Krypto-Portfolio verwalten"; cryptoSettings.setAttribute("aria-label", "Krypto-Portfolio verwalten");
+  cryptoSettings.setAttribute("aria-controls", "portfolio-panel");
   let sessionEpoch = 0;
   let cloudReady = false;
   let noteDirty = false;
@@ -177,7 +182,7 @@
     draggedNoteId = null; document.body.classList.remove("notes-dragging");
     cloudReady = false; noteDirty = false; noteRevision = 0;
     noteStatus = "Notiz wird aus deinem Konto geladen …";
-    portfolioOpen = false;
+    portfolioOpen = false; cryptoSettingsOpen = false;
     inventoryOpen = false;
     generation++;
     cancelRequests();
@@ -194,6 +199,7 @@
   }
   function render() {
     updateNoteRailWidths();
+    portfolioPanel.classList.toggle("portfolio-summary", !cryptoSettingsOpen);
     grid.replaceChildren();
     notesDock.replaceChildren(); rightNotesDock.replaceChildren(); portfolioPanel.replaceChildren(); inventoryPanel.replaceChildren();
     const showNotes = Boolean(userId && cloudReady && settings.enabled.includes("notes"));
@@ -222,6 +228,7 @@
         });
         continue;
       }
+      if (id === "crypto" && !cryptoSettingsOpen) { renderCryptoSummary(portfolioPanel); continue; }
       const card = el("article", undefined, "module-card");
       card.dataset.module = id;
       const heading = el("div", undefined, "module-heading");
@@ -410,6 +417,19 @@
     select.value = value;
     return select;
   }
+  function renderCryptoSummary(parent) {
+    parent.append(el("div", "Portfolio", "forecast-title"));
+    for (const holding of settings.holdings) {
+      const row = el("div", undefined, "forecast-day crypto-forecast-row");
+      const quote = prices.get(holding.symbol);
+      row.append(el("strong", holding.symbol), el("span", holding.amount.toLocaleString("de-DE", { maximumFractionDigits: 8 }), "crypto-quantity"), el("span", quote ? money(quote.price * holding.amount) : "—", "crypto-coin-value"));
+      row.setAttribute("aria-label", `${holding.symbol}: ${holding.amount} Coins, ${quote ? money(quote.price * holding.amount) : "Kurs noch nicht verfügbar"}`);
+      parent.append(row);
+    }
+    if (!settings.holdings.length) message(parent, "Coins über das Zahnrad im ＋-Menü hinzufügen.");
+    const status = message(parent, cryptoTime ? `Stand ${cryptoTime.toLocaleTimeString("de-DE", {hour:"2-digit",minute:"2-digit"})} · Kraken` : settings.holdings.length ? "Kurse werden geladen …" : "Kraken");
+    status.dataset.cryptoStatus = ""; status.setAttribute("aria-live", "polite");
+  }
   function renderCrypto(card) {
     const currency = choice([["EUR", "Euro (€)"], ["USD", "US-Dollar ($)"]], settings.currency);
     currency.setAttribute("aria-label", "Portfolio-Währung");
@@ -463,7 +483,7 @@
       } catch (error) { if (current === generation) formStatus.textContent = error.message; }
       finally { submit.disabled = false; }
     });
-    const details = el("details"); details.append(el("summary", "Coins und Mengen verwalten"), form); details.open = !settings.holdings.length;
+    const details = el("details"); details.append(el("summary", "Coins und Mengen verwalten"), form); details.open = true;
     card.append(details);
     const refresh = button(cryptoBusy ? "Wird aktualisiert …" : "Kurse aktualisieren", refreshCrypto);
     refresh.disabled = cryptoBusy || !settings.holdings.length;
@@ -661,15 +681,15 @@
       if (!settings.enabled.includes(module.id)) settings.enabled.push(module.id);
       if (module.id === "notes") settings.noteItems.push({ id: newNoteId(), content: "", color: "yellow", collapsed: false });
       save(module.id === "notes");
-      if (module.id === "crypto") portfolioOpen = true;
+      if (module.id === "crypto") { portfolioOpen = true; cryptoSettingsOpen = true; }
       if (module.id === "cs2") inventoryOpen = true;
       render(); closePicker();
       if (module.id === "crypto") refreshCrypto();
     });
     item.dataset.addModule = module.id;
-    if (module.id === "cs2") {
+    if (module.id === "cs2" || module.id === "crypto") {
       const row = el("div", undefined, "add-choice-row");
-      list.append(row); row.append(item, inventorySettings);
+      list.append(row); row.append(item, module.id === "cs2" ? inventorySettings : cryptoSettings);
     }
   }
   inventorySettings.className = "module-button inventory-picker-settings hidden";
@@ -686,6 +706,7 @@
       item.querySelector("span").textContent = item.disabled ? (module.id === "notes" ? "Maximal 50 Notizen sind möglich" : "Bereits auf deinem Dashboard hinzugefügt") : module.description;
     });
     inventorySettings.classList.toggle("hidden", !settings.enabled.includes("cs2"));
+    cryptoSettings.classList.toggle("hidden", !settings.enabled.includes("crypto"));
     picker.classList.remove("hidden"); list.querySelector("button").focus();
   };
   picker.addEventListener("keydown", event => {
@@ -703,9 +724,16 @@
     if (inventoryOpen) { portfolioOpen = false; portfolioPanel.classList.add("hidden"); portfolioButton.setAttribute("aria-expanded", "false"); document.getElementById("weather-panel")?.classList.add("hidden"); document.getElementById("weather-info")?.setAttribute("aria-expanded", "false"); }
     inventoryPanel.classList.toggle("hidden", !inventoryOpen); inventorySettings.setAttribute("aria-expanded", String(inventoryOpen));
   });
+  cryptoSettings.addEventListener("click", () => {
+    closePicker(); cryptoSettingsOpen = true; portfolioOpen = true; inventoryOpen = false;
+    document.getElementById("weather-panel")?.classList.add("hidden");
+    document.getElementById("weather-info")?.setAttribute("aria-expanded", "false");
+    render();
+  });
   portfolioButton.addEventListener("click", () => {
     inventoryOpen = false; inventoryPanel.classList.add("hidden"); inventorySettings.setAttribute("aria-expanded", "false");
-    portfolioOpen = !portfolioOpen;
+    portfolioOpen = cryptoSettingsOpen || !portfolioOpen; cryptoSettingsOpen = false;
+    render();
     portfolioPanel.classList.toggle("hidden", !portfolioOpen);
     portfolioButton.setAttribute("aria-expanded", String(portfolioOpen));
     if (portfolioOpen) {

@@ -72,11 +72,13 @@ function create() {
   vm.createContext(context); vm.runInContext(code, context);
   return { ids, document, alerts, openMenu: () => context.window.KH7_OPEN_ADD_MENU(), tileDialogs: () => tileDialogs, online: () => events.online(), session: detail => events['kh7-session']({ detail }), grid: ids['modules-grid'], picker: document.body.children[0] };
 }
-const flush = async () => { for (let n = 0; n < 12; n++) await Promise.resolve(); };
+const flush = async () => { for (let n = 0; n < 40; n++) await Promise.resolve(); };
 const card = (app, id) => [...app.grid.children, ...app.ids['notes-dock'].children, ...app.ids['notes-dock-right'].children, ...app.ids['portfolio-panel'].children, ...app.ids['inventory-panel'].children].find(c => c.dataset.module === id);
 const getButton = (parent, text) => parent.querySelectorAll('button').find(b => b.textContent === text);
 const enable = async (app, id) => { app.openMenu(); const item = app.picker.querySelectorAll('button').find(n => n.dataset.addModule === id); await item.emit('click'); await flush(); };
+const manageCrypto = async app => { app.openMenu(); await app.picker.querySelectorAll('button').find(b => Object.hasOwn(b.dataset,'manageCrypto')).emit('click'); };
 const addCoin = async (app, symbol, amount) => {
+  await manageCrypto(app);
   const form = card(app, 'crypto').querySelector('form'); const inputs = form.querySelectorAll('input'); inputs[0].value = symbol; inputs[1].value = amount; await form.emit('submit'); await flush();
 };
 const addProfile = async (app, label, profile) => {
@@ -107,14 +109,17 @@ const sync = async () => { await new Promise(resolve => setTimeout(resolve, 460)
   // A fresh browser has no local dashboard data and restores everything online.
   const peer=create(); peer.session({isAdmin:true,userId:'user-a'}); await flush();
   assert.equal(peer.ids['notes-dock-right'].children.length,2); assert.equal(peer.ids['inventory-values'].children.length,2);
-  assert.equal(card(peer,'crypto').querySelectorAll('select')[0].value,'USD');
+  assert(peer.ids['portfolio-panel'].classList.contains('portfolio-summary')); assert(!peer.ids['portfolio-panel'].querySelector('form'));
+  await peer.ids['portfolio-info'].emit('click'); assert(!peer.ids['portfolio-panel'].classList.contains('hidden'));
+  assert.match(peer.ids['portfolio-panel'].textContent,/BTC/); assert.match(peer.ids['portfolio-panel'].textContent,/22\.500,00/);
+  await manageCrypto(peer); assert.equal(peer.picker.querySelectorAll('button').find(b=>Object.hasOwn(b.dataset,'manageCrypto')).parent.children[0].dataset.addModule,'crypto'); assert.equal(card(peer,'crypto').querySelectorAll('select')[0].value,'USD');
   assert.equal(peer.ids['notes-dock-right'].children[1].querySelector('textarea').value,'<script>text only</script>');
   peer.openMenu(); assert.equal(peer.ids['inventory-settings'].parent.children[0].dataset.addModule,'cs2');
   await peer.ids['inventory-settings'].emit('click'); assert(peer.picker.classList.contains('hidden'));
   // Old local data on another device must never override a migrated account.
   store.set('kh7-modules-v1:user-a', JSON.stringify({enabled:['crypto'],holdings:[{symbol:'BTC',amount:999}]}));
   const stale=create(); stale.session({isAdmin:true,userId:'user-a'}); await flush(); assert.equal(store.has('kh7-modules-v1:user-a'),false);
-  assert.match(card(stale,'crypto').textContent,/1,5/); assert.equal(persisted().holdings[0].amount,1.5);
+  await manageCrypto(stale); assert.match(card(stale,'crypto').textContent,/1,5/); assert.equal(persisted().holdings[0].amount,1.5);
   // Failed writes keep the server unchanged, and online reconnection retries automatically.
   cloudError=true; const note=peer.ids['notes-dock-right'].children[0]; note.querySelector('textarea').value='Unsaved edit'; await note.querySelector('textarea').emit('input'); await sync();
   assert.equal(persisted().noteItems[0].content,'Online-Notiz'); assert.match(note.textContent,/Cloud-Speicherung fehlgeschlagen/); assert.equal(store.size,0);
