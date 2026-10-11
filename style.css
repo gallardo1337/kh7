@@ -716,5 +716,5 @@ body.admin-mode .tile[draggable="true"]:active { cursor: grabbing; }
   }
 }
 
-#header-date { font-family: monospace; letter-spacing: 1px; font-size: .95rem; color: #fff; opacity: .75; white-space: nowrap; user-select: none; }
-@media (max-width: 600px) { #header-date { font-size: .75rem; } }
+#header-date { font-family: monospace; letter-spacing: 1px; font-size: 1.15rem; color: #fff; opacity: .75; white-space: nowrap; user-select: none; }
+@media (max-width: 700px) { #header-date, #clock { font-size: 1rem; } }
