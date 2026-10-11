@@ -38,7 +38,6 @@
   function paint(parent) {
     parent.replaceChildren();
     if(!cache){parent.append(el("p","BVB-Daten werden geladen …","module-muted"));return;}
-    parent.append(el("h4","Nächste Spiele"));
     if(cache.errors[0])parent.append(el("p","Spiele konnten nicht aktualisiert werden. Vorhandene Daten bleiben sichtbar.","module-muted"));
     const matches=(cache.matches||[]).filter(m=>!m.matchIsFinished&&competition(m)&&(isBVB(m.team1)||isBVB(m.team2))&&kickoff(m)&&kickoff(m).getTime()>Date.now()-2*60*60*1000).sort((a,b)=>kickoff(a)-kickoff(b)).slice(0,5);
     if(!matches.length)parent.append(el("p","Keine kommenden Spiele in der Datenquelle verfügbar.","module-muted"));
