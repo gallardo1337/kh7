@@ -2,7 +2,25 @@
 (() => {
   let cache = null, pending = null;
   const el = (tag,text,cls) => { const n=document.createElement(tag); if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n; };
-  const isBVB = team => Number(team?.teamId ?? team?.teamInfoId) === 7 || /borussia dortmund/i.test(team?.teamName || "");
+  const isBVB = team => Number(team?.teamId ?? team?.teamInfoId) === 7 && !/\b(?:ii|u\s?-?\d{2}|frauen|women|jugend|youth|amateur|reserve)\b/i.test(team?.teamName || "");
+  function competition(match) {
+    const name = `${match.leagueName || ""} ${match.leagueShortcut || ""}`;
+    if (/women|frauen|youth|jugend|junior|u-?\d{2}|regionalliga|(?:2|3)\.\s*bundesliga/i.test(name)) return null;
+    if (/champions\s*league|(?:^|\s)ucl(?:\s|$)/i.test(name)) return {code:"CL",name:"UEFA Champions League",logo:"https://a.espncdn.com/i/leaguelogos/soccer/500/2.png"};
+    if (/dfb[ -]?pokal/i.test(name)) return {code:"DFB",name:"DFB-Pokal",logo:"https://upload.wikimedia.org/wikipedia/en/0/02/DFB-Pokal_logo.jpg"};
+    if (/bundesliga|(?:^|\s)bl1(?:\s|$)/i.test(name)) return {code:"BL",name:"Bundesliga",logo:"https://a.espncdn.com/i/leaguelogos/soccer/500/10.png"};
+    return null;
+  }
+  function logo(url,label,cls,fallback) {
+    const wrap=el("span",undefined,cls);wrap.setAttribute("title",label);
+    const text=el("span",fallback,"bvb-logo-fallback");wrap.append(text);
+    if(typeof url==="string" && /^https:\/\//i.test(url)){const img=el("img");img.src=url;img.alt=label;img.width=22;img.height=22;img.loading="lazy";img.referrerPolicy="no-referrer";img.addEventListener("load",()=>{text.className="hidden";});img.addEventListener("error",()=>{img.className="hidden";text.className="bvb-logo-fallback";});wrap.append(img);}
+    return wrap;
+  }
+  function teamLabel(team) {
+    const name=team?.teamName || "Unbekannter Verein",node=el("span",undefined,"bvb-team");node.setAttribute("title",name);
+    node.append(logo(team?.teamIconUrl,name,"bvb-team-logo",name.slice(0,3).toUpperCase()),el("span",team?.shortName||name,"bvb-team-name"));return node;
+  }
   const kickoff = match => { const utc=match.matchDateTimeUTC; return utc ? new Date(/[zZ]|[+-]\d\d:\d\d$/.test(utc)?utc:`${utc}Z`) : null; };
   const season = () => { const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Berlin",year:"numeric",month:"numeric"}).formatToParts(new Date());const year=Number(parts.find(p=>p.type==="year").value),month=Number(parts.find(p=>p.type==="month").value);return month>=7?year:year-1; };
   async function get(path) {
@@ -23,9 +41,15 @@
     if(!cache){parent.append(el("p","BVB-Daten werden geladen …","module-muted"));return;}
     parent.append(el("h4","Nächste Spiele"));
     if(cache.errors[0])parent.append(el("p","Spiele konnten nicht aktualisiert werden. Vorhandene Daten bleiben sichtbar.","module-muted"));
-    const matches=(cache.matches||[]).filter(m=>!m.matchIsFinished&&(isBVB(m.team1)||isBVB(m.team2))&&kickoff(m)&&kickoff(m).getTime()>Date.now()-2*60*60*1000).sort((a,b)=>kickoff(a)-kickoff(b)).slice(0,5);
+    const matches=(cache.matches||[]).filter(m=>!m.matchIsFinished&&competition(m)&&(isBVB(m.team1)||isBVB(m.team2))&&kickoff(m)&&kickoff(m).getTime()>Date.now()-2*60*60*1000).sort((a,b)=>kickoff(a)-kickoff(b)).slice(0,5);
     if(!matches.length)parent.append(el("p","Keine kommenden Spiele in der Datenquelle verfügbar.","module-muted"));
-    for(const match of matches){const row=el("article",undefined,"bvb-match");row.append(el("strong",`${match.team1?.shortName||match.team1?.teamName||"—"} – ${match.team2?.shortName||match.team2?.teamName||"—"}`),el("p",kickoff(match).toLocaleString("de-DE",{timeZone:"Europe/Berlin",weekday:"short",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}),"module-muted"),el("small",match.leagueName||"Wettbewerb"));parent.append(row);}
+    const matchList=el("div",undefined,"bvb-matches");
+    for(const match of matches){
+      const row=el("article",undefined,"bvb-match"),comp=competition(match),date=kickoff(match);
+      const day=date.toLocaleDateString("de-DE",{timeZone:"Europe/Berlin",day:"2-digit",month:"2-digit"}),time=date.toLocaleTimeString("de-DE",{timeZone:"Europe/Berlin",hour:"2-digit",minute:"2-digit"});
+      row.setAttribute("aria-label",`${comp.name}: ${day} ${time}, ${match.team1.teamName} gegen ${match.team2.teamName}`);
+      row.append(logo(comp.logo,comp.name,"bvb-competition-logo",comp.code),el("time",`${day} ${time}`,"bvb-kickoff"),teamLabel(match.team1),el("span","–","bvb-versus"),teamLabel(match.team2));matchList.append(row);
+    }parent.append(matchList);
     parent.append(el("h4",`Bundesliga ${cache.season}/${String(cache.season+1).slice(-2)}`));
     if(cache.errors[1])parent.append(el("p","Tabelle konnte nicht aktualisiert werden. Vorhandene Daten bleiben sichtbar.","module-muted"));
     if(cache.table?.length){const table=el("table",undefined,"bvb-table");table.setAttribute("aria-label","Aktuelle Bundesliga-Tabelle");const head=el("thead"),header=el("tr");for(const name of ["#","Verein","Sp.","TD","Pkt."]){const th=el("th",name);th.setAttribute("scope","col");header.append(th);}head.append(header);table.append(head);const body=el("tbody");

@@ -191,3 +191,13 @@
 .bvb-table th, .bvb-table td { padding: 6px 3px; text-align: right; border-bottom: 1px solid #ffffff12; }
 .bvb-table th:nth-child(2), .bvb-table td:nth-child(2) { text-align: left; overflow-wrap: anywhere; }
 .bvb-table .bvb-highlight { color: #f5d328; background: #f5d32815; font-weight: bold; }
+
+.bvb-matches { overflow-x: auto; }
+.bvb-match { display: flex; align-items: center; gap: 5px; white-space: nowrap; min-width: max-content; font-size: .7rem; }
+.bvb-competition-logo, .bvb-team-logo { display: inline-flex; position: relative; align-items: center; justify-content: center; width: 22px; height: 22px; flex: 0 0 22px; }
+.bvb-competition-logo { background: #f3f3f3; border-radius: 3px; color: #222; }
+.bvb-competition-logo img, .bvb-team-logo img { position: absolute; inset: 0; width: 22px; height: 22px; object-fit: contain; filter: none; }
+.bvb-logo-fallback { font-size: 8px; font-weight: bold; }
+.bvb-kickoff { font-variant-numeric: tabular-nums; color: #bfc3c7; }
+.bvb-team { display: inline-flex; align-items: center; gap: 3px; }
+.bvb-team-name { max-width: 74px; overflow: hidden; text-overflow: ellipsis; }
