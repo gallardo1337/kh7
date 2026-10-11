@@ -50,7 +50,7 @@ function create() {
       };
     }, auth: { getSession: async () => ({ data: { session: { access_token: 'valid-token' } } }) } } },
     showToast: message => alerts.push(message), openAddTileModal: () => tileDialogs++, AbortController, clearTimeout, setTimeout,
-    window: { KH7_CONFIG: { supabaseUrl: "https://test.supabase.co", supabasePublishableKey: "public-key" }, setTimeout, setInterval() {}, addEventListener: (event, fn) => { events[event] = fn; } },
+    window: { confirm: () => true, KH7_CONFIG: { supabaseUrl: "https://test.supabase.co", supabasePublishableKey: "public-key" }, setTimeout, setInterval() {}, addEventListener: (event, fn) => { events[event] = fn; } },
     fetch: async (url, options) => {
       let data; let ok = true;
       if (url.includes('AssetPairs')) data = { error: [], result: markets };
@@ -97,7 +97,7 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   await enable(app, 'notes'); assert.equal(app.ids['notes-dock'].children.length, 2);
   const secondNote = app.ids['notes-dock'].children[1];
   secondNote.querySelector('textarea').value = 'Zweite unabhängige Notiz'; await secondNote.querySelector('textarea').emit('input');
-  await getButton(secondNote, 'Zuklappen').emit('click');
+  await getButton(secondNote, '−').emit('click');
   assert.equal(persisted().noteItems[1].collapsed, true);
   assert.equal(secondNote.querySelector('[data-note-toggle]').attrs['aria-expanded'], 'false');
   const notes = card(app, 'notes').querySelector('textarea'); notes.value = '<script>alert(1)</script> Meine Notiz'; await notes.emit('input');
@@ -107,6 +107,7 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   await pink.emit('click');
   assert.equal(persisted().noteItems[0].color, 'pink');
   assert.equal(card(app, 'notes').dataset.noteColor, 'pink');
+
   assert.equal(pink.attrs['aria-pressed'], 'true');
   assert.equal(card(app, 'notes').querySelector('textarea'), notes);
   assert.equal(persisted().noteItems[0].content, notes.value);
@@ -147,7 +148,8 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   assert.match(app.ids['inventory-values'].children[0].textContent, /≈ 50,00/);
   assert.equal(app.ids['inventory-values'].children[1].href, 'https://www.steamanalyst.com/inventory/76500000000000002');
   assert.match(app.ids['inventory-values'].children[1].textContent, /75,00/);
-  await app.ids['inventory-settings'].emit('click'); assert(app.ids['inventory-panel'].classList.contains('hidden'));
+  app.openMenu(); assert(!app.ids['inventory-settings'].classList.contains('hidden'));
+  await app.ids['inventory-settings'].emit('click'); assert(app.picker.classList.contains('hidden')); assert(!app.ids['inventory-panel'].classList.contains('hidden'));
   await app.ids['inventory-settings'].emit('click'); assert(!app.ids['inventory-panel'].classList.contains('hidden'));
   assert(!app.ids['inventory-values'].textContent.includes('CS2')); assert(!app.ids['inventory-values'].textContent.includes('Hauptaccount'));
   assert.equal(csrfCalls, 4);
@@ -155,9 +157,11 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   assert.equal(persisted().currency, 'USD'); assert.match(card(app, 'cs2').textContent, /Noch nicht geladen/);
   assert.match(card(app, 'crypto').textContent, /15\.000,00/); assert.match(card(app, 'crypto').textContent, /Kurs fehlt/);
   const before = persisted().noteItems[0].content;
-  await getButton(card(app, 'notes'), 'Zuklappen').emit('click'); assert.equal(persisted().noteItems[0].content, before);
-  await getButton(card(app, 'notes'), 'Aufklappen').emit('click'); assert.equal(card(app, 'notes').querySelector('textarea').value, before);
+  await getButton(card(app, 'notes'), '−').emit('click'); assert.equal(persisted().noteItems[0].content, before);
+  await getButton(card(app, 'notes'), '+').emit('click'); assert.equal(card(app, 'notes').querySelector('textarea').value, before);
   assert.equal(card(app, 'notes').dataset.noteColor, 'pink');
+
+
   app.session({ isAdmin: false, userId: null }); assert.equal(app.grid.children.length, 0); assert(app.ids['modules-panel'].classList.contains('hidden'));
   assert.equal(app.ids['notes-dock'].children.length, 0); assert.equal(app.ids['portfolio-panel'].children.length, 0);
   assert(app.ids['inventory-info'].classList.contains('hidden')); assert(app.ids['inventory-panel'].classList.contains('hidden'));
@@ -238,5 +242,9 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   moved.session({ isAdmin: false, userId: null });
   await moved.ids['notes-dock-right'].emit('drop');
   assert.equal(moved.ids['notes-dock-right'].children.length, 0);
+  const countBeforeDelete = persisted().noteItems.length; await getButton([...secondBrowser.ids['notes-dock'].children, ...secondBrowser.ids['notes-dock-right'].children].find(n => n.dataset.noteId === persisted().noteItems[1].id), '🗑').emit('click');
+  assert.equal(persisted().noteItems.length, countBeforeDelete - 1); await new Promise(resolve => setTimeout(resolve, 800));
+  assert.equal(cloud.get('user-a').note_items.length, countBeforeDelete - 1);
+  secondBrowser.openMenu(); assert.equal(secondBrowser.ids['inventory-settings'].parent.tagName, 'div');
   console.log('PASS: notes, drag/drop, side and order persistence, keyboard/touch fallback, cancelled drag, account isolation, portfolio and inventories.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

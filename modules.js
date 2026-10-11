@@ -258,11 +258,20 @@
     function updateCollapsed() {
       body.classList.toggle("hidden", note.collapsed);
       card.classList.toggle("note-collapsed", note.collapsed);
-      toggle.textContent = note.collapsed ? "Aufklappen" : "Zuklappen";
+      toggle.textContent = note.collapsed ? "+" : "−";
+      toggle.title = note.collapsed ? "Aufklappen" : "Zuklappen";
+      toggle.setAttribute("aria-label", toggle.title);
       toggle.setAttribute("aria-expanded", String(!note.collapsed));
       title.textContent = note.collapsed && note.content.trim() ? note.content.trim().split("\n")[0] : `Notiz ${index + 1}`;
     }
-    heading.append(handle, title, toggle); card.append(heading, body); updateCollapsed();
+    const remove = button("🗑", () => {
+      if (!window.confirm("Diese Notiz löschen?")) return;
+      settings.noteItems = settings.noteItems.filter(item => item.id !== note.id);
+      save(true); render();
+    });
+    remove.classList.add("note-delete"); remove.title = "Notiz löschen";
+    remove.setAttribute("aria-label", "Notiz löschen");
+    heading.append(handle, title, toggle, remove); card.append(heading, body); updateCollapsed();
     card.classList.add("sticky-note");
     card.dataset.noteColor = note.color;
     const palette = el("div", undefined, "note-palette");
@@ -592,6 +601,9 @@
     });
     item.dataset.addModule = module.id;
   }
+  inventorySettings.className = "add-choice hidden";
+  inventorySettings.replaceChildren(el("strong", "Inventare verwalten"), el("span", "Steam-Profile hinzufügen, bearbeiten und Werte aktualisieren.", "module-muted"));
+  list.append(inventorySettings);
   content.append(list); message(content, "Notizen, Farben und Klappzustände werden in deinem Konto gespeichert. Portfolio-Mengen und Profillisten bleiben in diesem Browser."); content.append(button("Fertig", closePicker)); picker.append(backdrop, content); document.body.append(picker);
   function closePicker() { picker.classList.add("hidden"); document.getElementById("add-tile-btn").focus(); }
   window.KH7_OPEN_ADD_MENU = () => {
@@ -601,6 +613,7 @@
       const module = catalog.find(value => value.id === item.dataset.addModule);
       item.querySelector("span").textContent = item.disabled ? (module.id === "notes" ? "Maximal 50 Notizen sind möglich" : "Bereits auf deinem Dashboard hinzugefügt") : module.description;
     });
+    inventorySettings.classList.toggle("hidden", !settings.enabled.includes("cs2"));
     picker.classList.remove("hidden"); list.querySelector("button").focus();
   };
   picker.addEventListener("keydown", event => {
@@ -613,7 +626,8 @@
   });
   window.addEventListener("kh7-session", event => setSession(event.detail));
   inventorySettings.addEventListener("click", () => {
-    inventoryOpen = !inventoryOpen;
+    closePicker();
+    inventoryOpen = true;
     if (inventoryOpen) { portfolioOpen = false; portfolioPanel.classList.add("hidden"); portfolioButton.setAttribute("aria-expanded", "false"); document.getElementById("weather-panel")?.classList.add("hidden"); document.getElementById("weather-info")?.setAttribute("aria-expanded", "false"); }
     inventoryPanel.classList.toggle("hidden", !inventoryOpen); inventorySettings.setAttribute("aria-expanded", String(inventoryOpen));
   });
