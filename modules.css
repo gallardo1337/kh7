@@ -137,8 +137,6 @@
 }
 
 .module-card.sticky-note { max-width: 100%; box-sizing: border-box; }
-.note-pinned .note-pin { background: #ffffff80; border-color: #302a2570; }
-.sticky-note .module-heading .note-pin { font-size: .85rem; padding: 3px; min-width: 25px; }
 .sticky-note .note-resize-handle { position: absolute; bottom: 4px; right: 5px; z-index: 1; border: 0; background: transparent; padding: 2px 4px; cursor: nwse-resize; touch-action: none; font-size: 1rem; }
 .sticky-note[data-note-side="right"] .note-resize-handle { left: 5px; right: auto; transform: scaleX(-1); cursor: nesw-resize; }
 .note-collapsed .note-resize-handle { display: none; }

@@ -128,7 +128,7 @@
     return source.slice(0, 50).filter(note => note && typeof note === "object").map(note => {
       let id = typeof note.id === "string" && /^[a-zA-Z0-9-]{1,80}$/.test(note.id) && !ids.has(note.id) ? note.id : newNoteId();
       ids.add(id);
-      return { id, content: typeof note.content === "string" ? note.content.slice(0, 20000) : "", color: noteColors.some(([key]) => key === note.color) ? note.color : "yellow", collapsed: note.collapsed === true, side: note.side === "right" ? "right" : "left", pinned: note.pinned === true, width: Number.isFinite(note.width) ? Math.max(220, Math.min(480, Math.round(note.width))) : null, height: Number.isFinite(note.height) ? Math.max(220, Math.min(800, Math.round(note.height))) : null };
+      return { id, content: typeof note.content === "string" ? note.content.slice(0, 20000) : "", color: noteColors.some(([key]) => key === note.color) ? note.color : "yellow", collapsed: note.collapsed === true, side: note.side === "right" ? "right" : "left", width: Number.isFinite(note.width) ? Math.max(220, Math.min(480, Math.round(note.width))) : null, height: Number.isFinite(note.height) ? Math.max(220, Math.min(800, Math.round(note.height))) : null };
     });
   }
   function normalizeSettings(data) {
@@ -215,7 +215,7 @@
     for (const id of settings.enabled) {
       const module = catalog.find(item => item.id === id);
       if (id === "notes") {
-        [...settings.noteItems].sort((a, b) => Number(b.pinned) - Number(a.pinned)).forEach((note, index) => {
+        settings.noteItems.forEach((note, index) => {
           const card = el("article", undefined, "module-card");
           card.dataset.module = "notes"; card.dataset.noteId = note.id;
           renderNotes(card, note, index); (note.side === "right" ? rightNotesDock : notesDock).append(card);
@@ -262,11 +262,6 @@
       event.preventDefault(); event.stopPropagation();
       moveNote(draggedNoteId, note.side === "right" ? "right" : "left", note.id);
     });
-    const pin = button("📌", () => { note.pinned = !note.pinned; save(); render(); });
-    pin.classList.add("note-pin"); pin.dataset.notePin = "";
-    pin.title = note.pinned ? "Notiz lösen" : "Notiz anpinnen";
-    pin.setAttribute("aria-label", pin.title); pin.setAttribute("aria-pressed", String(Boolean(note.pinned)));
-    card.classList.toggle("note-pinned", Boolean(note.pinned));
     const title = el("h3", `Notiz ${settings.noteItems.indexOf(note) + 1}`);
     const body = el("div", undefined, "note-content"); body.id = `note-body-${note.id}`;
     const toggle = button("", () => { note.collapsed = !note.collapsed; updateCollapsed(); save(true); });
@@ -290,7 +285,7 @@
     const binIcon = el("span", "", "trash-icon"); binIcon.setAttribute("aria-hidden", "true"); remove.append(binIcon);
     remove.classList.add("note-delete"); remove.title = "Notiz löschen";
     remove.setAttribute("aria-label", "Notiz löschen");
-    heading.append(handle, title, pin, toggle, remove); card.append(heading, body); updateCollapsed();
+    heading.append(handle, title, toggle, remove); card.append(heading, body); updateCollapsed();
     card.classList.add("sticky-note");
     card.dataset.noteColor = note.color;
     card.dataset.noteSide = note.side || "left";
@@ -372,7 +367,7 @@
     }
   }
   function reorderNote(note, direction) {
-    const peers = settings.noteItems.filter(item => (item.side || "left") === (note.side || "left") && Boolean(item.pinned) === Boolean(note.pinned));
+    const peers = settings.noteItems.filter(item => (item.side || "left") === (note.side || "left"));
     const other = peers[peers.indexOf(note) + direction]; if (!other) return;
     const from = settings.noteItems.indexOf(note), to = settings.noteItems.indexOf(other);
     [settings.noteItems[from], settings.noteItems[to]] = [settings.noteItems[to], settings.noteItems[from]];

@@ -125,7 +125,7 @@ const sync = async () => { await new Promise(resolve => setTimeout(resolve, 460)
   // A failed initial read cannot replace an existing remote account with defaults.
   cloudError=true; const blocked=create(); blocked.session({isAdmin:true,userId:'user-a'}); await sync(); blocked.openMenu(); assert(blocked.picker.classList.contains('hidden')); assert.equal(persisted().holdings[0].amount,1.5);
   cloudError=false; blocked.online(); await flush(); assert.equal(blocked.ids['inventory-values'].children.length,2);
-  // Resizing and pinning survive a fresh login, cancellation never persists a size.
+  // Resizing and sorting survive a fresh login, cancellation never persists a size.
   await enable(blocked,'notes'); await sync();
   let resizable=blocked.ids['notes-dock'].children[0];
   let grip=resizable.querySelector('[data-note-resize]');
@@ -136,15 +136,12 @@ const sync = async () => { await new Promise(resolve => setTimeout(resolve, 460)
   await grip.emit('pointerdown',{pointerId:2,clientX:0,clientY:0,button:0});
   await grip.emit('pointermove',{pointerId:2,clientX:9999,clientY:9999});
   await grip.emit('pointercancel',{pointerId:2}); assert.equal(resizable.style.width,'360px');
-  await resizable.querySelector('[data-note-pin]').emit('click'); await sync(); assert.equal(persisted().noteItems[1].pinned,true);
   await blocked.ids['notes-dock'].children[0].querySelector('[data-note-drag]').emit('click'); await sync();
-  assert.equal(blocked.ids['notes-dock-right'].children[0].dataset.noteId,persisted().noteItems[1].id);
+  assert.equal(blocked.ids['notes-dock-right'].children[1].dataset.noteId,persisted().noteItems[1].id);
   const sizedPeer=create(); sizedPeer.session({isAdmin:true,userId:'user-a'}); await flush();
-  const pinned=sizedPeer.ids['notes-dock-right'].children[0]; assert.equal(pinned.style.width,'360px'); assert.equal(pinned.style.height,'440px');
-  assert.equal(pinned.querySelector('[data-note-pin]').attrs['aria-pressed'],'true');
-  await getButton(pinned,'−').emit('click'); assert.equal(pinned.style.height,''); await getButton(pinned,'+').emit('click'); assert.equal(pinned.style.height,'440px');
-  await pinned.querySelector('[data-note-resize]').emit('keydown',{key:'ArrowDown'}); await sync(); assert.equal(persisted().noteItems[1].height,460);
-  await pinned.querySelector('[data-note-pin]').emit('click'); await sync();
+  const resized=sizedPeer.ids['notes-dock-right'].children[1]; assert.equal(resized.style.width,'360px'); assert.equal(resized.style.height,'440px');
+  await getButton(resized,'−').emit('click'); assert.equal(resized.style.height,''); await getButton(resized,'+').emit('click'); assert.equal(resized.style.height,'440px');
+  await resized.querySelector('[data-note-resize]').emit('keydown',{key:'ArrowDown'}); await sync(); assert.equal(persisted().noteItems[1].height,460);
   assert.equal(sizedPeer.ids['notes-dock-right'].children[0].dataset.noteId,persisted().noteItems[0].id);
   await sizedPeer.ids['notes-dock-right'].children[1].querySelector('[data-note-drag]').emit('keydown',{key:'ArrowUp'}); await sync();
   assert.equal(persisted().noteItems[0].width,360);
