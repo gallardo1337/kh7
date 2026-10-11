@@ -43,6 +43,13 @@
   const prices = new Map();
   const inventories = new Map();
   let cryptoTime = null;
+  let valueHistory = [];
+  let historyLoaded = false;
+  let historyError = "";
+  let historyRange = 30;
+  const openInventoryHistories = new Set();
+  const pendingHistory = new Map();
+  let historyWrites = Promise.resolve();
   const noteColors = [["yellow", "Gelb"], ["pink", "Rosa"], ["blue", "Blau"], ["green", "Grün"], ["purple", "Lila"]];
 
   function defaults() { return { enabled: [], notes: "", noteColor: "yellow", noteItems: [], currency: "EUR", holdings: [], profiles: [], valuation: "steam" }; }
@@ -119,6 +126,8 @@
           noteDirty = true; queueNoteSave();
         }
         updateNoteStatus("Aus deinem Konto geladen"); render();
+        await loadValueHistory();
+        if (epoch !== sessionEpoch) return;
         if (settings.enabled.includes("crypto") && settings.holdings.length) refreshCrypto();
         if (settings.enabled.includes("cs2") && settings.profiles.length) refreshInventories();
       } else if (noteDirty) queueNoteSave();
@@ -179,6 +188,7 @@
     const nextId = detail.isAdmin ? detail.userId : null;
     if (nextId === userId) return;
     sessionEpoch++; clearTimeout(cloudTimer);
+    valueHistory = []; openInventoryHistories.clear(); historyLoaded = false; historyError = ""; pendingHistory.clear();
     draggedNoteId = null; document.body.classList.remove("notes-dragging");
     cloudReady = false; noteDirty = false; noteRevision = 0;
     noteStatus = "Notiz wird aus deinem Konto geladen …";
@@ -438,6 +448,7 @@
     if (!settings.holdings.length) message(parent, "Coins über das Zahnrad im ＋-Menü hinzufügen.");
     const status = message(parent, cryptoTime ? `Stand ${cryptoTime.toLocaleTimeString("de-DE", {hour:"2-digit",minute:"2-digit"})} · Kraken` : settings.holdings.length ? "Kurse werden geladen …" : "Kraken");
     status.dataset.cryptoStatus = ""; status.setAttribute("aria-live", "polite");
+    renderValueHistory(parent, "portfolio", "total", settings.currency);
   }
   function renderCrypto(card) {
     const currency = choice([["EUR", "Euro (€)"], ["USD", "US-Dollar ($)"]], settings.currency);
@@ -514,7 +525,7 @@
     return Object.entries(markets).find(([, market]) => market.wsname === `${base}/${settings.currency}`);
   }
   async function refreshCrypto() {
-    if (!userId || !settings.enabled.includes("crypto") || !settings.holdings.length || cryptoBusy) return;
+    if (!userId || !cloudReady || !settings.enabled.includes("crypto") || !settings.holdings.length || cryptoBusy) return;
     const current = generation;
     cryptoBusy = true; render();
     let errorMessage;
@@ -534,6 +545,10 @@
       }
       if (!prices.size) throw new Error("Die Kursantwort enthielt keine gültigen Preise.");
       cryptoTime = new Date();
+      if (settings.holdings.every(holding => prices.has(holding.symbol))) {
+        const total = settings.holdings.reduce((sum, holding) => sum + prices.get(holding.symbol).price * holding.amount, 0);
+        await recordValue("portfolio", "total", settings.currency, total);
+      }
     } catch (error) { errorMessage = "Aktualisierung fehlgeschlagen. " + (cryptoTime ? "Letzte Kurse bleiben sichtbar. " : "") + error.message; }
     finally {
       if (current === generation) {
@@ -541,6 +556,89 @@
         if (errorMessage) { const status = portfolioPanel.querySelector("[data-crypto-status]"); if (status) status.textContent = errorMessage; }
       }
     }
+  }
+  function berlinDay(date = new Date()) {
+    const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
+    const value = name => parts.find(part => part.type === name).value;
+    return `${value("year")}-${value("month")}-${value("day")}`;
+  }
+  function offsetDay(day, offset) {
+    const date = new Date(`${day}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + offset); return date.toISOString().slice(0, 10);
+  }
+  function profileHistoryKey(profile) { return profile.replace(/^https:\/\/steamcommunity\.com\/profiles\//, "").replace(/\/$/, ""); }
+  function historyFor(kind, assetKey, currency) {
+    return valueHistory.filter(point => point.kind === kind && point.asset_key === assetKey && point.currency === currency).sort((a, b) => a.day.localeCompare(b.day));
+  }
+  function mergeHistory(point) {
+    if (!point || !Number.isFinite(Number(point.total)) || Number(point.total) < 0 || !/^\d{4}-\d{2}-\d{2}$/.test(point.day)) return;
+    valueHistory = valueHistory.filter(item => !(item.kind === point.kind && item.asset_key === point.asset_key && item.currency === point.currency && item.day === point.day));
+    valueHistory.push({ ...point, total: Number(point.total) });
+  }
+  async function loadValueHistory() {
+    if (!userId) return;
+    const epoch = sessionEpoch;
+    try {
+      const response = await state.client.from("dashboard_value_history").select("kind,asset_key,currency,day,total").eq("user_id", userId).gte("day", offsetDay(berlinDay(), -89)).order("day", { ascending: false }).limit(2000);
+      if (epoch !== sessionEpoch) return;
+      if (response.error) throw response.error;
+      (response.data || []).forEach(mergeHistory); historyLoaded = true; historyError = ""; render();
+    } catch { if (epoch === sessionEpoch) { historyError = "Verlauf konnte nicht geladen werden. Automatischer Neuversuch folgt."; render(); } }
+  }
+  function recordValue(kind, assetKey, currency, total) {
+    if (!userId || !Number.isFinite(total) || total < 0) return Promise.resolve();
+    const payload = { user_id: userId, kind, asset_key: assetKey, currency, day: berlinDay(), total: Math.round(total * 100) / 100, updated_at: new Date().toISOString() };
+    const key = `${kind}:${assetKey}:${currency}:${payload.day}`;
+    pendingHistory.set(key, payload);
+    return flushValueHistory();
+  }
+  function flushValueHistory() {
+    const epoch = sessionEpoch;
+    historyWrites = historyWrites.catch(() => {}).then(async () => {
+      if (epoch !== sessionEpoch || !userId) return;
+      for (const [key, payload] of [...pendingHistory]) {
+        if (epoch !== sessionEpoch) return;
+        try {
+          const response = await state.client.from("dashboard_value_history").upsert(payload, { onConflict: "user_id,kind,asset_key,currency,day" });
+          if (response.error) throw response.error;
+          if (epoch !== sessionEpoch) return;
+          mergeHistory(payload);
+          if (pendingHistory.get(key) === payload) pendingHistory.delete(key);
+        } catch { if (epoch === sessionEpoch) historyError = "Tageswert noch nicht online gespeichert. Automatischer Neuversuch folgt."; return; }
+      }
+      if (historyLoaded) historyError = "";
+    });
+    return historyWrites;
+  }
+  function changeLabel(current, baseline, suffix, currency) {
+    const change = current - baseline;
+    const text = `${change > 0 ? "+" : ""}${inventoryMoney(change, currency)}`;
+    const node = el("span", text, `value-change ${change >= 0 ? "value-positive" : "value-negative"}`);
+    const percent = baseline > 0 ? ` (${change > 0 ? "+" : ""}${(change / baseline * 100).toLocaleString("de-DE", { maximumFractionDigits: 1 })} %)` : "";
+    node.title = `${text}${percent} ${suffix}`; node.setAttribute("aria-label", node.title); return node;
+  }
+  function renderValueHistory(parent, kind, assetKey, currency) {
+    const panel = el("section", undefined, "value-history");
+    const toolbar = el("div", undefined, "value-history-toolbar"); toolbar.append(el("strong", "Verlauf"));
+    for (const days of [7, 30, 90]) {
+      const range = button(`${days}T`, () => { historyRange = days; render(); }); range.setAttribute("aria-pressed", String(historyRange === days)); toolbar.append(range);
+    }
+    panel.append(toolbar); parent.append(panel);
+    if (historyError) message(panel, historyError);
+    const points = historyFor(kind, assetKey, currency).filter(point => point.day >= offsetDay(berlinDay(), -(historyRange - 1)));
+    if (!points.length) { message(panel, historyLoaded ? "Der Verlauf beginnt mit dem ersten erfolgreich gespeicherten Tageswert." : "Verlauf wird geladen …"); return; }
+    if (points.length === 1) { message(panel, `Erster Tageswert: ${inventoryMoney(points[0].total, currency)} · ${points[0].day.split("-").reverse().join(".")}. Weitere Tage erscheinen nach erfolgreichen Abrufen.`); return; }
+    const first = points[0], last = points[points.length - 1];
+    const delta = last.total - first.total;
+    const summary = el("p", `${delta > 0 ? "+" : ""}${inventoryMoney(delta, currency)} im angezeigten Zeitraum`, `value-change ${delta >= 0 ? "value-positive" : "value-negative"}`); panel.append(summary);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("viewBox", "0 0 280 90"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", `Wertverlauf von ${first.day} bis ${last.day}: ${points.map(point => `${point.day}: ${inventoryMoney(point.total, currency)}`).join(", ")}`);
+    const min = Math.min(...points.map(point => point.total)), max = Math.max(...points.map(point => point.total));
+    const firstTime = Date.parse(`${first.day}T12:00:00Z`), lastTime = Date.parse(`${last.day}T12:00:00Z`);
+    const coordinates = points.map(point => [10 + (Date.parse(`${point.day}T12:00:00Z`) - firstTime) / Math.max(1, lastTime - firstTime) * 260, max === min ? 45 : 80 - (point.total - min) / (max - min) * 70]);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline"); line.setAttribute("points", coordinates.map(point => point.join(",")).join(" ")); line.setAttribute("class", "history-line"); svg.append(line);
+    points.forEach((point, index) => { const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle"); dot.setAttribute("cx", coordinates[index][0]); dot.setAttribute("cy", coordinates[index][1]); dot.setAttribute("r", "3"); const title = document.createElementNS("http://www.w3.org/2000/svg", "title"); title.textContent = `${point.day}: ${inventoryMoney(point.total, currency)}`; dot.append(title); svg.append(dot); });
+    panel.append(svg);
+    const labels = el("div", undefined, "history-labels"); labels.append(el("span", first.day.split("-").reverse().slice(0, 2).join(".")), el("span", last.day.split("-").reverse().slice(0, 2).join("."))); panel.append(labels);
+    message(panel, "Tageswerte aus erfolgreichen Abrufen bei geöffnetem KH7. Lücken enthalten keine Messwerte; Bestandsänderungen sind enthalten.");
   }
   function validProfile(profile) {
     return typeof profile === "string" && (/^765\d{14}$/.test(profile) || /^https:\/\/steamcommunity\.com\/(?:profiles\/765\d{14}|id\/[A-Za-z0-9_-]{1,80})\/?$/.test(profile));
@@ -573,7 +671,11 @@
         image.addEventListener("error", () => { image.classList.add("hidden"); fallback.classList.remove("hidden"); });
         avatar.append(image);
       }
-      value.append(avatar, el("span", result ? (result.unpricedCount ? "≈ " : "") + inventoryMoney(result.total, result.currency) : "—", "inventory-amount"));
+      const figures = el("span", undefined, "inventory-figures");
+      figures.append(el("span", result ? (result.unpricedCount ? "≈ " : "") + inventoryMoney(result.total, result.currency) : "—", "inventory-amount"));
+      const yesterday = historyFor("inventory", profileHistoryKey(profile.profile), "EUR").find(point => point.day === offsetDay(berlinDay(), -1));
+      if (result && yesterday && !result.unpricedCount) figures.append(changeLabel(result.total, yesterday.total, "seit gestern", "EUR"));
+      value.append(avatar, figures);
       value.dataset.inventoryProfile = profile.profile;
       const href = steamAnalystURL(profile.profile);
       if (href) { value.href = href; value.target = "_blank"; value.rel = "noopener noreferrer"; }
@@ -610,7 +712,10 @@
       remove.setAttribute("aria-label", `${profile.label} entfernen`);
       row.append(description, value, remove);
       card.append(row);
-
+      const history = el("details", undefined, "inventory-history"); history.append(el("summary", `Wertverlauf · ${profile.label}`));
+      history.open = openInventoryHistories.has(profile.profile);
+      history.addEventListener("toggle", () => { if (history.open) openInventoryHistories.add(profile.profile); else openInventoryHistories.delete(profile.profile); });
+      renderValueHistory(history, "inventory", profileHistoryKey(profile.profile), "EUR"); card.append(history);
     }
     const form = el("form", undefined, "stacked-form");
     const label = field(form, "Profilname", input("z. B. Hauptaccount", 40));
@@ -635,7 +740,7 @@
     message(card, "Es wird der auf SteamAnalyst angezeigte SA Price übernommen, einschließlich des dortigen Aktualisierungsstands.");
   }
   async function refreshInventories() {
-    if (!userId || inventoryBusy || !settings.profiles.length) return;
+    if (!userId || !cloudReady || inventoryBusy || !settings.profiles.length) return;
     const current = generation; inventoryBusy = true; render();
     const errors = [];
     let success = 0;
@@ -653,6 +758,7 @@
           if (current !== generation) return;
           if (!Number.isFinite(result.total) || result.total < 0 || !Number.isFinite(result.itemCount) || !Number.isFinite(result.unpricedCount) || !Number.isFinite(Date.parse(result.updatedAt))) throw new Error("Ungültige Inventarantwort.");
           inventories.set(profile.profile, result); success++;
+          if (!result.unpricedCount) await recordValue("inventory", profileHistoryKey(profile.profile), "EUR", result.total);
           if (result.warning) errors.push(`${profile.label}: ${result.warning}`);
         } catch (error) { if (current !== generation) return; errors.push(`${profile.label}: ${error.message}${inventories.has(profile.profile) ? " Letzter Wert bleibt sichtbar." : ""}`); }
       }
@@ -762,6 +868,8 @@
     if (!userId) return;
     if (!cloudReady) loadCloudNotes();
     else if (noteDirty) writeNote();
+    if (!historyLoaded) loadValueHistory();
+    if (pendingHistory.size) flushValueHistory();
   }
   window.addEventListener("online", retryNoteSync);
   window.addEventListener("beforeunload", event => {

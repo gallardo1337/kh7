@@ -30,6 +30,7 @@ class Node {
 const code = fs.readFileSync(path.join(__dirname, '../modules.js'), 'utf8');
 const store = new Map();
 const cloud = new Map();
+const historyRows = new Map();
 let cloudError = false;
 let failCrypto = false;
 let failProfile = false;
@@ -38,13 +39,17 @@ const markets = { XXBTZEUR: { wsname: 'XBT/EUR', altname: 'XBTEUR' }, XETHZEUR: 
 function create() {
   const ids = Object.fromEntries(['modules-panel', 'modules-grid', 'modules-empty', 'add-tile-btn', 'notes-dock', 'notes-dock-right', 'dashboard-right-rail', 'portfolio-info', 'portfolio-panel', 'inventory-info', 'inventory-values', 'inventory-settings', 'inventory-panel'].map(id => [id, new Node('div')]));
   ids['modules-panel'].className = 'hidden';
-  const document = { body: new Node('body'), getElementById: id => ids[id], createElement: tag => new Node(tag), hidden: false };
+  const document = { body: new Node('body'), getElementById: id => ids[id], createElement: tag => new Node(tag), createElementNS: (ns,tag) => new Node(tag), hidden: false };
   const events = {};
   const alerts = [];
   let tileDialogs = 0;
   const context = {
     document, localStorage: { getItem: key => store.get(key) || null, setItem: () => { throw Error("Dashboard must not write localStorage"); }, removeItem: key => store.delete(key) },
     state: { isAdmin: false, user: null, client: { from: table => {
+      if (table === 'dashboard_value_history') return {
+        select: () => ({ eq: (name,id) => ({ gte: () => ({ order: () => ({ limit: async () => ({data:[...historyRows.values()].filter(row=>row.user_id===id),error:cloudError?{message:'offline'}:null}) }) }) }) }),
+        upsert: async payload => { if(cloudError) return {error:{message:'offline'}}; historyRows.set([payload.user_id,payload.kind,payload.asset_key,payload.currency,payload.day].join(':'),{...payload}); return {error:null}; },
+      };
       assert.equal(table, 'dashboard_notes');
       return {
         select: () => ({ eq: (column, id) => ({ maybeSingle: async () => ({ data: cloud.get(id) || null, error: cloudError ? { message: 'offline' } : null }) }) }),
@@ -72,7 +77,7 @@ function create() {
   vm.createContext(context); vm.runInContext(code, context);
   return { ids, document, alerts, openMenu: () => context.window.KH7_OPEN_ADD_MENU(), tileDialogs: () => tileDialogs, online: () => events.online(), session: detail => events['kh7-session']({ detail }), grid: ids['modules-grid'], picker: document.body.children[0] };
 }
-const flush = async () => { for (let n = 0; n < 40; n++) await Promise.resolve(); };
+const flush = async () => { for (let n = 0; n < 80; n++) await Promise.resolve(); };
 const card = (app, id) => [...app.grid.children, ...app.ids['notes-dock'].children, ...app.ids['notes-dock-right'].children, ...app.ids['portfolio-panel'].children, ...app.ids['inventory-panel'].children].find(c => c.dataset.module === id);
 const getButton = (parent, text) => parent.querySelectorAll('button').find(b => b.textContent === text);
 const enable = async (app, id) => { app.openMenu(); const item = app.picker.querySelectorAll('button').find(n => n.dataset.addModule === id); await item.emit('click'); await flush(); };
@@ -158,5 +163,21 @@ const sync = async () => { await new Promise(resolve => setTimeout(resolve, 460)
   assert.match(coinRows[0].textContent,/ETH/); assert.match(coinRows[1].textContent,/BTC/);
   const coinIcon=coinRows[0].querySelector('img'); assert.match(coinIcon.src,/0\.18\.1.*eth\.svg$/);
   await coinIcon.emit('error'); assert(coinIcon.classList.contains('hidden')); assert.match(coinRows[0].textContent,/ETH/);
+  // Daily snapshots are online, separate by currency and source, and do not duplicate.
+  const portfolioRows=[...historyRows.values()].filter(row=>row.user_id==='user-a' && row.kind==='portfolio' && row.currency==='EUR');
+  assert.equal(portfolioRows.length,1); assert.equal(portfolioRows[0].total,55000);
+  const today=portfolioRows[0].day; const previous=new Date(today+'T12:00:00Z'); previous.setUTCDate(previous.getUTCDate()-1); const yesterday=previous.toISOString().slice(0,10);
+  const seed=(kind,asset_key,currency,total,day)=> { const row={user_id:'user-a',kind,asset_key,currency,total,day}; historyRows.set(['user-a',kind,asset_key,currency,day].join(':'),row); };
+  seed('portfolio','total','EUR',50000,yesterday); seed('portfolio','total','USD',999999,yesterday);
+  seed('inventory','76500000000000002','EUR',65,yesterday);
+  const historyPeer=create(); historyPeer.session({isAdmin:true,userId:'user-a'}); await flush();
+  await historyPeer.ids['portfolio-info'].emit('click');
+  const graph=historyPeer.ids['portfolio-panel'].querySelector('svg'); assert(graph); assert.match(graph.attrs['aria-label'],/50\.000,00/); assert(!graph.attrs['aria-label'].includes('999.999'));
+  assert.equal(graph.querySelectorAll('circle').length,2); assert.match(historyPeer.ids['inventory-values'].children[1].textContent,/10,00/);
+  assert(!historyPeer.ids['inventory-values'].children[0].textContent.includes('seit gestern'));
+  await getButton(historyPeer.ids['portfolio-panel'],'7T').emit('click'); assert.equal(getButton(historyPeer.ids['portfolio-panel'],'7T').attrs['aria-pressed'],'true');
+  await manageCrypto(historyPeer); await getButton(card(historyPeer,'crypto'),'Kurse aktualisieren').emit('click'); await flush();
+  assert.equal([...historyRows.values()].filter(row=>row.user_id==='user-a'&&row.kind==='portfolio'&&row.currency==='EUR'&&row.day===today).length,1);
+  failCrypto=true; const count=historyRows.size; await getButton(card(historyPeer,'crypto'),'Kurse aktualisieren').emit('click'); await flush(); assert.equal(historyRows.size,count); failCrypto=false;
   console.log('PASS: one-time migration, online-only writes, notes and module restoration on fresh devices, stale local data, collapse/color/drag/delete, reconnect retry, failed initial reads, and account isolation.');
 })().catch(error => { console.error(error); process.exitCode=1; });
