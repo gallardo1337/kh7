@@ -179,3 +179,4 @@
 .inventory-figures { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .inventory-history { margin: 8px 0 16px; font-size: .85rem; }
 .inventory-history summary { cursor: pointer; }
+.portfolio-panel.portfolio-summary:has(.value-history) { width: 320px; }
