@@ -90,7 +90,7 @@
     <button id="lock-btn" class="header-icon-btn" type="button" title="Anmelden" aria-label="Anmelden">🔒</button>
   </div>
 
-  <button class="version-info" id="version-info" type="button">v2.8.0</button>
+  <button class="version-info" id="version-info" type="button">v2.8.1</button>
 
   <div id="login-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="login-title">
     <button class="modal-bg" type="button" data-close-modal aria-label="Schließen"></button>
@@ -149,7 +149,7 @@
     <div class="modal-content calendar-content">
       <div class="modal-header"><span id="calendar-title">Kalender</span><button id="calendar-close" class="module-button" type="button">Schließen</button></div>
       <div class="calendar-navigation"><button id="calendar-prev" class="module-button" type="button" aria-label="Vorheriger Monat">‹</button><strong id="calendar-month"></strong><button id="calendar-today" class="module-button" type="button">Heute</button><button id="calendar-next" class="module-button" type="button" aria-label="Nächster Monat">›</button></div>
-      <div class="calendar-layout"><section><div id="calendar-weekdays" class="calendar-grid calendar-weekdays" aria-hidden="true"></div><div id="calendar-days" class="calendar-grid" aria-label="Kalendertage"></div></section>
+      <div class="calendar-layout"><section><div id="calendar-weekdays" class="calendar-grid calendar-weekdays" aria-hidden="true"></div><div id="calendar-days" class="calendar-grid" aria-label="Kalendertage"></div><p class="calendar-legend"><span class="holiday-national">● Bundesweit</span> <span class="holiday-nrw">● NRW</span></p></section>
       <section class="calendar-agenda"><h3 id="calendar-selected"></h3><div id="calendar-events"></div>
         <form id="calendar-form" class="stacked-form">
           <label><input id="calendar-event-birthday" type="checkbox"> Geburtstag (jährlich wiederholen)</label>
@@ -172,6 +172,10 @@
         <button type="button" class="close-btn" data-close-modal aria-label="Schließen">&times;</button>
       </div>
       <div class="modal-body">
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.8.1</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
+          <div class="changelog-details">Gesetzliche Feiertage im Kalender automatisch markieren: bundesweite Feiertage und zusätzlich in NRW geltende Feiertage mit eigenen Farben. Ein Klick zeigt Name und Geltungsbereich; bewegliche Feiertage werden für jedes Jahr berechnet.</div>
+        </div>
         <div class="changelog-block">
           <div class="changelog-version"><span>v2.8.0</span><time class="changelog-date" datetime="2026-10-11">11.10.2026</time></div>
           <div class="changelog-details">Geburtstage im Kalender jährlich wiederholen, mit Geburtstags-Symbol und Alter. Online gespeichert und auf anderen Geräten verfügbar. Geburtstage am 29. Februar erscheinen in Nicht-Schaltjahren am 28. Februar.</div>
@@ -267,6 +271,7 @@
   <script src="config.js"></script>
   <script src="app.js" defer></script>
   <script src="modules.js" defer></script>
+  <script src="holidays.js" defer></script>
   <script src="calendar.js" defer></script>
 </body>
 </html>

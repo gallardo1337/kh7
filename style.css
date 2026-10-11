@@ -743,3 +743,10 @@ body.admin-mode .tile[draggable="true"]:active { cursor: grabbing; }
 .calendar-content textarea { background: #171a1c; border: 1px solid #ffffff26; border-radius: 8px; color: #eee; padding: 8px; resize: vertical; }
 .calendar-day:focus-visible { outline: 2px solid #85dcaa; outline-offset: 2px; }
 @media (max-width: 600px) { .calendar-layout { grid-template-columns: 1fr; gap: 18px; } .calendar-day { padding-top: 7px; } }
+
+.calendar-day[data-holiday="bundesweit"] { color: #f0adad; box-shadow: inset 0 -3px #f0adad; }
+.calendar-day[data-holiday="NRW"] { color: #e9cc80; box-shadow: inset 0 -3px #e9cc80; }
+.calendar-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .8rem; }
+.holiday-national { color: #f0adad; }
+.holiday-nrw { color: #e9cc80; }
+.calendar-holiday { border-left: 3px solid #e9cc80; padding-left: 10px; }

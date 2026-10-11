@@ -34,7 +34,7 @@ function app(){
  insert:payload=>({select:()=>({single:async()=>{if(fail)return{error:{message:'offline'}};const row={...payload,id:String(nextId++),deleted_at:null};rows.set(row.id,row);return{data:{id:row.id}};}})}),
  update:changes=>{const filter={};const q={eq:(key,value)=>{filter[key]=value;return q;},select:()=>q,single:async()=>{if(fail)return{error:{message:'offline'}};const row=rows.get(filter.id);if(!row||row.user_id!==filter.user_id)return{error:{message:'denied'}};Object.assign(row,changes);return{data:{id:row.id}};}};return q;}
  };}};
- const alerts=[];const context={document,state:{isAdmin:false,user:null,client},window:{confirm:()=>true,addEventListener:(type,fn)=>listeners[type]=fn},showToast:text=>alerts.push(text)};vm.createContext(context);vm.runInContext(code,context);
+ const alerts=[];const context={document,state:{isAdmin:false,user:null,client},window:{confirm:()=>true,addEventListener:(type,fn)=>listeners[type]=fn},showToast:text=>alerts.push(text)};vm.createContext(context);vm.runInContext(fs.readFileSync('holidays.js','utf8'),context);vm.runInContext(code,context);
  return{ids,alerts,session:id=>listeners['kh7-session']({detail:{isAdmin:Boolean(id),userId:id}})};
 }
 const flush=async()=>{for(let n=0;n<40;n++)await Promise.resolve();};
@@ -49,6 +49,7 @@ const click=async(node)=>{await node.emit('click');await flush();};const button=
  await click(button(a.ids['calendar-events'],'Bearbeiten'));a.ids['calendar-event-title'].value='Geändert';a.ids['calendar-event-time'].value='';await a.ids['calendar-form'].emit('submit');await flush();assert.equal(row.title,'Geändert');assert.equal(row.event_time,null);assert.match(a.ids['calendar-events'].textContent,/Ganztägig/);
  await click(button(a.ids['calendar-events'],'Löschen'));assert(row.deleted_at);assert(!a.ids['calendar-undo'].classList.contains('hidden'));assert(!a.ids['calendar-events'].textContent.includes('Geändert'));
  await click(a.ids['calendar-undo']);assert.equal(row.deleted_at,null);assert.match(a.ids['calendar-events'].textContent,/Geändert/);
+ const october=a.ids['calendar-event-date'].value.slice(0,7);if(october==='2026-10'){await click(a.ids['calendar-days'].children.find(n=>n.dataset.day==='2026-10-03'));assert.match(a.ids['calendar-events'].textContent,/Tag der Deutschen Einheit/);assert.equal(a.ids['calendar-days'].children.find(n=>n.dataset.day==='2026-10-03').dataset.holiday,'bundesweit');await click(a.ids['calendar-today']);}
  const previousMonth=a.ids['calendar-month'].textContent;await click(a.ids['calendar-next']);assert.notEqual(a.ids['calendar-month'].textContent,previousMonth);await click(a.ids['calendar-prev']);assert.equal(a.ids['calendar-month'].textContent,previousMonth);await click(a.ids['calendar-today']);
  const peer=app();peer.session('owner-a');await click(peer.ids['header-date']);assert.match(peer.ids['calendar-events'].textContent,/Geändert/);
  peer.session('owner-b');await click(peer.ids['header-date']);assert(!peer.ids['calendar-events'].textContent.includes('Geändert'));

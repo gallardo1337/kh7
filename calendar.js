@@ -31,17 +31,22 @@
     get("calendar-month").textContent = asDate(`${month}-01`).toLocaleDateString("de-DE", { timeZone:"UTC", month:"long", year:"numeric" });
     get("calendar-selected").textContent = label(selected);
     days.replaceChildren(); list.replaceChildren();
+    const holidays = kh7Holidays(Number(month.slice(0,4)));
     const first = asDate(`${month}-01`), offset = (first.getUTCDay() + 6) % 7;
     const count = new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+1,0)).getUTCDate();
     for (let blank = 0; blank < offset; blank++) days.append(element("span"));
     for (let day = 1; day <= count; day++) {
       const key = `${month}-${String(day).padStart(2,"0")}`, entries = events.filter(event => occursOn(event, key));
       const node = button(String(day), () => { selected = key; reset(); render(); }); node.className = "calendar-day";
+      const holiday = holidays.get(key); node.dataset.holiday = holiday?.scope || "";
+      if (holiday) node.setAttribute("title", `${holiday.name} · ${holiday.scope === "NRW" ? "Feiertag in NRW" : "bundesweiter Feiertag"}`);
       node.dataset.day = key; node.dataset.today = String(key === today()); node.dataset.hasEvents = String(entries.length > 0);
-      node.setAttribute("aria-pressed", String(key === selected)); node.setAttribute("aria-label", `${label(key)}${entries.length ? ` · ${entries.length} Termine` : ""}`); days.append(node);
+      node.setAttribute("aria-pressed", String(key === selected)); node.setAttribute("aria-label", `${label(key)}${holiday ? ` · ${holiday.name} (${holiday.scope})` : ""}${entries.length ? ` · ${entries.length} Termine` : ""}`); days.append(node);
     }
     const entries = events.filter(event => occursOn(event, selected)).sort((a,b) => (a.event_time || "").localeCompare(b.event_time || ""));
-    if (!entries.length) list.append(element("p", loaded ? "Keine Termine an diesem Tag." : "Termine werden geladen …", "module-muted"));
+    const holiday = holidays.get(selected);
+    if (holiday) { const row = element("article", undefined, "calendar-event calendar-holiday"); row.append(element("strong", holiday.name), element("p", holiday.scope === "NRW" ? "Gesetzlicher Feiertag in NRW (nicht bundesweit)." : "Gesetzlicher Feiertag bundesweit, auch in NRW.")); list.append(row); }
+    if (!entries.length && !holiday) list.append(element("p", loaded ? "Keine Termine an diesem Tag." : "Termine werden geladen …", "module-muted"));
     for (const event of entries) {
       const row = element("article", undefined, "calendar-event"); row.dataset.eventId = event.id;
       row.append(element("strong", event.is_birthday ? `🎂 ${event.title}${Number(selected.slice(0,4)) > Number(event.event_date.slice(0,4)) ? ` · ${Number(selected.slice(0,4)) - Number(event.event_date.slice(0,4))} Jahre` : ""}` : `${event.event_time ? event.event_time.slice(0,5) : "Ganztägig"} · ${event.title}`));
