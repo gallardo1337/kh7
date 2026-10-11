@@ -635,13 +635,20 @@ body.admin-mode .tile[draggable="true"]:active { cursor: grabbing; }
 .changelog-block:last-child { border-bottom: none; }
 
 .changelog-version {
-  min-width: 66px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 90px;
+  flex: 0 0 90px;
   color: #fff;
   font-weight: bold;
   font-size: 1rem;
   letter-spacing: 1px;
   margin-top: 2px;
 }
+
+.changelog-version > span, .changelog-date { display: block; width: 100%; }
+.changelog-date { color: #aaa; font-size: 0.75rem; font-weight: normal; letter-spacing: 0; }
 
 .changelog-details {
   color: #ccc;
@@ -697,6 +704,7 @@ body.admin-mode .tile[draggable="true"]:active { cursor: grabbing; }
   #lock-container { top: 12px; right: 10px; gap: 5px; }
   #clock { margin-right: 2px; font-size: 1rem; }
   .changelog-block { flex-direction: column; gap: 6px; }
+  .changelog-version { flex-basis: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
