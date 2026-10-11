@@ -505,7 +505,7 @@
     const submit = el("button", "Profil hinzufügen", "module-button"); submit.type = "submit"; form.append(submit);
     form.addEventListener("submit", event => {
       event.preventDefault();
-      const value = profile.value.trim().replace(/\/$/, "");
+      const value = profile.value.trim().replace(/^http:\/\/steamcommunity\.com\//i, "https://steamcommunity.com/").replace(/\/$/, "");
       const normalized = value.replace(/^https:\/\/steamcommunity\.com\/profiles\//, "");
       if (!validProfile(normalized)) { status.textContent = "Bitte einen Steam-Profillink (https://steamcommunity.com/…) oder eine SteamID64 eingeben."; return; }
       if (settings.profiles.length >= 10) { status.textContent = "Maximal 10 Profile sind möglich."; return; }
