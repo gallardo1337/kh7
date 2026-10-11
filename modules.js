@@ -249,7 +249,7 @@
         settings.enabled = settings.enabled.filter(value => value !== id);
         save(id === "notes"); render();
       }));
-      card.append(heading);
+      if (id !== "bvb") card.append(heading);
       module.render(card);
       (id === "bvb" ? grid : id === "notes" ? notesDock : id === "crypto" ? portfolioPanel : inventoryPanel).append(card);
     }

@@ -37,7 +37,6 @@
   }
   function paint(parent) {
     parent.replaceChildren();
-    const refresh=el("button","Aktualisieren","module-button");refresh.type="button";refresh.disabled=Boolean(pending);refresh.addEventListener("click",async()=>{if(cache&&Date.now()-cache.at<60000)return;refresh.disabled=true;await load();paint(parent);});parent.append(refresh);
     if(!cache){parent.append(el("p","BVB-Daten werden geladen …","module-muted"));return;}
     parent.append(el("h4","Nächste Spiele"));
     if(cache.errors[0])parent.append(el("p","Spiele konnten nicht aktualisiert werden. Vorhandene Daten bleiben sichtbar.","module-muted"));
