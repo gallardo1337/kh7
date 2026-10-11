@@ -170,6 +170,7 @@ async function toggleWeather() {
 }
 
 function applyAdminAppearance() {
+  window.dispatchEvent(new CustomEvent("kh7-session", { detail: { isAdmin: state.isAdmin, userId: state.user?.id || null } }));
   elements.body.classList.toggle("admin-mode", state.isAdmin);
   elements.tiles.classList.toggle("hidden", !state.isAdmin);
   elements.tilesStatus.classList.toggle("hidden", !state.isAdmin);

@@ -1,0 +1,30 @@
+.modules-panel { max-width: var(--container-max-width); margin: 42px auto 70px; text-align: left; padding: 0 16px; }
+.modules-toolbar, .module-heading, .module-price-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.modules-toolbar h2 { font-size: 1.1rem; font-weight: 500; color: #ddd; }
+.modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+.module-card { min-width: 0; background: #202326; border: 1px solid #ffffff17; border-radius: 16px; padding: 20px; }
+.module-heading { margin-bottom: 18px; }
+.module-heading h3 { margin: 0; font-size: 1rem; }
+.module-button { cursor: pointer; border: 1px solid #ffffff26; border-radius: 9px; padding: 8px 12px; background: #ffffff08; color: #eee; }
+.module-button:hover { background: #ffffff16; }
+.module-button:focus-visible, .module-card textarea:focus-visible { outline: 2px solid var(--highlight-color); outline-offset: 3px; }
+.module-button:disabled { opacity: .55; cursor: wait; }
+.module-muted { color: #aeb4ba; font-size: .82rem; line-height: 1.5; }
+.module-card textarea { width: 100%; min-height: 160px; resize: vertical; background: #171a1c; border: 1px solid #ffffff20; border-radius: 10px; padding: 12px; color: #eee; font: inherit; line-height: 1.6; }
+.module-price-row { padding: 12px 0; border-bottom: 1px solid #ffffff0d; flex-wrap: wrap; }
+.module-price-row > div { min-width: 0; overflow-wrap: anywhere; }
+.module-price-row > div:first-child { flex: 1; }
+.module-price-row .module-button { padding: 4px 8px; }
+.module-card > select { max-width: 100%; background: #171a1c; color: #eee; padding: 7px; border: 1px solid #ffffff26; border-radius: 8px; margin: 0 5px 5px 0; }
+.module-price-row strong { font-size: 1.1rem; }
+.module-big-value { font-size: 2rem; font-weight: 600; margin: 20px 0 8px; }
+.module-positive { color: #85dcaa; } .module-negative { color: #ff9a99; }
+.module-picker-list { display: grid; gap: 12px; margin: 18px 0; }
+.module-picker-item { padding: 14px; border: 1px solid #ffffff20; border-radius: 12px; }
+.module-picker-item label { display: flex; gap: 12px; align-items: center; cursor: pointer; }
+.module-picker-item input { width: 18px; height: 18px; accent-color: #85dcaa; }
+.module-picker-item p { margin: 8px 0 0 30px; }
+.module-card details { margin-top: 16px; } .module-card summary { cursor: pointer; color: #aeb4ba; font-size: .85rem; }
+.module-card .stacked-form { margin-top: 14px; }
+.module-card a { color: #aad6ff; }
+@media (max-width: 480px) { .modules-toolbar { align-items: flex-start; } .modules-toolbar h2 { white-space: nowrap; } .module-card { padding: 16px; } }
