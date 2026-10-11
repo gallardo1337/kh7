@@ -52,7 +52,7 @@
     if(cache.errors[1])parent.append(el("p","Tabelle konnte nicht aktualisiert werden. Vorhandene Daten bleiben sichtbar.","module-muted"));
     if(cache.table?.length){const table=el("table",undefined,"bvb-table");table.setAttribute("aria-label","Aktuelle Bundesliga-Tabelle");const head=el("thead"),header=el("tr");for(const name of ["#","Verein","Sp.","TD","Pkt."]){const th=el("th",name);th.setAttribute("scope","col");header.append(th);}head.append(header);table.append(head);const body=el("tbody");
       // Preserve the provider's ranking, including tie-break rules.
-      cache.table.forEach((team,index)=>{const row=el("tr");if(isBVB(team))row.className="bvb-highlight";for(const value of [index+1,team.shortName||team.teamName,team.matches,team.goalDiff,team.points])row.append(el("td",String(value??"—")));body.append(row);});table.append(body);parent.append(table);
+      cache.table.forEach((team,index)=>{const row=el("tr");if(isBVB(team))row.className="bvb-highlight";row.append(el("td",String(index+1)));const club=el("td");club.append(teamLabel(team));row.append(club);for(const value of [team.matches,team.goalDiff,team.points])row.append(el("td",String(value??"—")));body.append(row);});table.append(body);parent.append(table);
     }else parent.append(el("p","Noch keine Tabelle verfügbar.","module-muted"));
     const source=el("a","Daten: OpenLigaDB · ODbL","module-muted");source.href="https://www.openligadb.de/lizenz";source.target="_blank";source.rel="noopener noreferrer";parent.append(source,el("p",`Abruf ${cache.updated.toLocaleTimeString("de-DE",{timeZone:"Europe/Berlin",hour:"2-digit",minute:"2-digit"})} · Termine laut Datenquelle`,"module-muted"));
   }
