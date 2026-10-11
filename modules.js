@@ -64,7 +64,7 @@
   }
   function updateNoteStatus(text) {
     noteStatus = text;
-    [notesDock, rightNotesDock].forEach(dock => dock.querySelectorAll("[data-note-status]").forEach(status => { status.textContent = text; }));
+    [notesDock, rightNotesDock].forEach(dock => dock.querySelectorAll("[data-note-status]").forEach(status => { status.textContent = text; status.classList.toggle("hidden", !/^Cloud/.test(text)); }));
   }
   function queueNoteSave() {
     updateNoteStatus(cloudReady ? "Wird in deinem Konto gespeichert …" : "Notiz wird synchronisiert …");
@@ -298,6 +298,7 @@
     input.maxLength = 20000;
     input.value = note.content;
     const status = el("p", noteStatus, "module-muted");
+    status.classList.toggle("hidden", !/^Cloud/.test(noteStatus));
     status.dataset.noteStatus = "";
     status.setAttribute("aria-live", "polite");
     input.addEventListener("input", () => {
@@ -305,7 +306,6 @@
       save(true);
     });
     body.append(palette, input, status);
-    body.append(button("Synchronisieren", () => { if (cloudReady) { noteDirty = true; queueNoteSave(); } else loadCloudNotes(); }));
   }
   function moveNote(id, side, beforeId) {
     if (!userId) return;
@@ -654,6 +654,13 @@
     if (event.key === "Escape") { inventoryOpen = false; inventoryPanel.classList.add("hidden"); inventorySettings.setAttribute("aria-expanded", "false"); }
     if (event.key === "Escape") { portfolioOpen = false; portfolioPanel.classList.add("hidden"); portfolioButton.setAttribute("aria-expanded", "false"); }
   });
+  function retryNoteSync() {
+    if (!userId) return;
+    if (!cloudReady) loadCloudNotes();
+    else if (noteDirty) writeNote();
+  }
+  window.addEventListener("online", retryNoteSync);
+  window.setInterval(() => { if (!document.hidden) retryNoteSync(); }, 30000);
   if (typeof state !== "undefined") setSession({ isAdmin: state.isAdmin, userId: state.user?.id });
   window.setInterval(() => { if (!document.hidden && userId) refreshCrypto(); }, 300000);
   window.setInterval(() => { if (!document.hidden && userId && settings.enabled.includes("cs2") && inventories.size) refreshInventories(); }, 900000);

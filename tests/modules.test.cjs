@@ -68,7 +68,7 @@ function create() {
     },
   };
   vm.createContext(context); vm.runInContext(code, context);
-  return { ids, document, alerts, openMenu: () => context.window.KH7_OPEN_ADD_MENU(), tileDialogs: () => tileDialogs, session: detail => events['kh7-session']({ detail }), grid: ids['modules-grid'], picker: document.body.children[0] };
+  return { ids, document, alerts, openMenu: () => context.window.KH7_OPEN_ADD_MENU(), tileDialogs: () => tileDialogs, online: () => events.online(), session: detail => events['kh7-session']({ detail }), grid: ids['modules-grid'], picker: document.body.children[0] };
 }
 const flush = async () => { for (let n = 0; n < 12; n++) await Promise.resolve(); };
 const card = (app, id) => [...app.grid.children, ...app.ids['notes-dock'].children, ...app.ids['notes-dock-right'].children, ...app.ids['portfolio-panel'].children, ...app.ids['inventory-panel'].children].find(c => c.dataset.module === id);
@@ -190,7 +190,7 @@ const persisted = () => JSON.parse(store.get('kh7-modules-v1:user-a'));
   assert.match(card(secondBrowser, 'notes').textContent, /Cloud-Speicherung fehlgeschlagen/);
   assert.equal(persisted().notesPending, true); assert.equal(cloud.get('user-a').note_items[0].content, 'Geräteübergreifende Notiz');
   cloudError = false;
-  await getButton(card(secondBrowser, 'notes'), 'Synchronisieren').emit('click');
+  assert(!getButton(card(secondBrowser, 'notes'), 'Synchronisieren')); secondBrowser.online();
   await new Promise(resolve => setTimeout(resolve, 460)); await flush();
   assert.equal(cloud.get('user-a').note_items[0].content, 'Offline-Entwurf'); assert.equal(persisted().notesPending, false);
   cloud.set('legacy-user', { content: 'Bisherige Notiz', color: 'green', enabled: true });
