@@ -128,3 +128,10 @@
 .trash-icon { display: block; flex: 0 0 auto; box-sizing: border-box; position: relative; width: 12px; height: 13px; margin: 5px 0 0; border: 1.6px solid currentColor; border-top: 0; border-radius: 0 0 2px 2px; background: linear-gradient(currentColor,currentColor) 3px 3px / 1px 7px no-repeat, linear-gradient(currentColor,currentColor) 7px 3px / 1px 7px no-repeat; }
 .trash-icon::before { content: ""; position: absolute; left: -3px; right: -3px; top: -3px; border-top: 1.6px solid currentColor; }
 .trash-icon::after { content: ""; position: absolute; width: 6px; height: 3px; left: 1.5px; top: -6px; border: 1.6px solid currentColor; border-bottom: 0; border-radius: 2px 2px 0 0; }
+
+/* Both note rails start below the header and use the full viewport height. */
+@media (min-width: 1101px) {
+  .dashboard-right-rail { position: fixed; top: 78px; right: 18px; width: 280px; max-height: calc(100dvh - 105px); overflow-y: auto; margin: 0; padding: 0 0 20px 8px; z-index: 10; }
+  .notes-dock-right { width: 100%; margin: 0; padding: 0; }
+  body:has(.notes-dock:not(.hidden)) .dashboard-layout { display: block; margin: 0 314px; max-width: none; padding: 0; }
+}
