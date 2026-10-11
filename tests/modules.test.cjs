@@ -150,5 +150,13 @@ const sync = async () => { await new Promise(resolve => setTimeout(resolve, 460)
   assert.equal(sizedPeer.ids['notes-dock-right'].children[0].dataset.noteId,persisted().noteItems[0].id);
   await sizedPeer.ids['notes-dock-right'].children[1].querySelector('[data-note-drag]').emit('keydown',{key:'ArrowUp'}); await sync();
   assert.equal(persisted().noteItems[0].width,360);
+  await manageCrypto(sizedPeer);
+  const currency=card(sizedPeer,'crypto').querySelectorAll('select')[0]; currency.value='EUR'; await currency.emit('change'); await flush();
+  await addCoin(sizedPeer,'ETH','20'); await sync();
+  await sizedPeer.ids['portfolio-info'].emit('click'); await flush();
+  const coinRows=sizedPeer.ids['portfolio-panel'].children.filter(n=>n.className.includes('crypto-forecast-row'));
+  assert.match(coinRows[0].textContent,/ETH/); assert.match(coinRows[1].textContent,/BTC/);
+  const coinIcon=coinRows[0].querySelector('img'); assert.match(coinIcon.src,/0\.18\.1.*eth\.svg$/);
+  await coinIcon.emit('error'); assert(coinIcon.classList.contains('hidden')); assert.match(coinRows[0].textContent,/ETH/);
   console.log('PASS: one-time migration, online-only writes, notes and module restoration on fresh devices, stale local data, collapse/color/drag/delete, reconnect retry, failed initial reads, and account isolation.');
 })().catch(error => { console.error(error); process.exitCode=1; });

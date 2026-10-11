@@ -38,3 +38,5 @@ Der Dienst cs2-inventory ist im bestehenden Supabase-Projekt bereitgestellt. Er 
 ## Hostinger-Veröffentlichung
 
 Die statischen Webdateien werden direkt in `public_html` entpackt. Die enthaltene `.htaccess` setzt `index.html` als Startseite. Vorhandene Verzeichnisse wie `public_html/uploads` bleiben dabei unverändert und dürfen beim Hochladen nicht gelöscht werden.
+
+Coin-Icons stammen aus cryptocurrency-icons 0.18.1 (CC0): https://github.com/spothq/cryptocurrency-icons. Die Coin-Liste ist nach Positionswert absteigend sortiert; fehlende Kurse stehen zuletzt. Fehlende Icons lassen das lesbare Coin-Kürzel stehen.

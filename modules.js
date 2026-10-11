@@ -418,10 +418,20 @@
     return select;
   }
   function renderCryptoSummary(parent) {
-    for (const holding of settings.holdings) {
+    const sorted = [...settings.holdings].sort((a, b) => {
+      const aQuote = prices.get(a.symbol), bQuote = prices.get(b.symbol);
+      if (!aQuote || !bQuote) return Number(Boolean(bQuote)) - Number(Boolean(aQuote));
+      return bQuote.price * b.amount - aQuote.price * a.amount || a.symbol.localeCompare(b.symbol);
+    });
+    for (const holding of sorted) {
       const row = el("div", undefined, "forecast-day crypto-forecast-row");
       const quote = prices.get(holding.symbol);
-      row.append(el("strong", holding.symbol), el("span", holding.amount.toLocaleString("de-DE", { maximumFractionDigits: 8 }), "crypto-quantity"), el("span", quote ? money(quote.price * holding.amount) : "—", "crypto-coin-value"));
+      const coin = el("span", undefined, "crypto-coin-label");
+      const icon = el("img", undefined, "crypto-coin-icon"); icon.alt = ""; icon.width = 22; icon.height = 22; icon.referrerPolicy = "no-referrer";
+      icon.src = `https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/${holding.symbol.toLowerCase()}.svg`;
+      icon.addEventListener("error", () => icon.classList.add("hidden"));
+      coin.append(icon, el("strong", holding.symbol));
+      row.append(coin, el("span", holding.amount.toLocaleString("de-DE", { maximumFractionDigits: 8 }), "crypto-quantity"), el("span", quote ? money(quote.price * holding.amount) : "—", "crypto-coin-value"));
       row.setAttribute("aria-label", `${holding.symbol}: ${holding.amount} Coins, ${quote ? money(quote.price * holding.amount) : "Kurs noch nicht verfügbar"}`);
       parent.append(row);
     }
