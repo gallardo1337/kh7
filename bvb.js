@@ -23,9 +23,9 @@
   function competition(match) {
     const name = `${match.leagueName || ""} ${match.leagueShortcut || ""}`;
     if (/women|frauen|youth|jugend|junior|u-?\d{2}|regionalliga|(?:2|3)\.\s*bundesliga/i.test(name)) return null;
-    if (/champions\s*league|(?:^|\s)ucl(?:\s|$)/i.test(name)) return {code:"CL",name:"UEFA Champions League",logo:"https://a.espncdn.com/i/leaguelogos/soccer/500/2.png"};
-    if (/dfb[ -]?pokal/i.test(name)) return {code:"DFB",name:"DFB-Pokal",logo:"https://upload.wikimedia.org/wikipedia/en/0/02/DFB-Pokal_logo.jpg"};
-    if (/bundesliga|(?:^|\s)bl1(?:\s|$)/i.test(name)) return {code:"BL",name:"Bundesliga",logo:"https://a.espncdn.com/i/leaguelogos/soccer/500/10.png"};
+    if (/champions\s*league|(?:^|\s)ucl(?:\s|$)/i.test(name)) return {code:"CL",name:"UEFA Champions League",logo:"https://assets.footylogos.com/logos/uefa-champions-league/uefa-champions-league-logo-footylogos.svg"};
+    if (/dfb[ -]?pokal/i.test(name)) return {code:"DFB",name:"DFB-Pokal",logo:"https://assets.footylogos.com/logos/dfb-pokal-logo-footylogos.svg"};
+    if (/bundesliga|(?:^|\s)bl1(?:\s|$)/i.test(name)) return {code:"BL",name:"Bundesliga",logo:"https://assets.footylogos.com/logos/bundesliga-germany/bundesliga-germany-logo-footylogos.svg"};
     return null;
   }
   function logo(url,label,cls,fallback,backupUrl) {
@@ -73,7 +73,7 @@
       const row=el("article",undefined,"bvb-match"),comp=competition(match),date=kickoff(match);
       const day=date.toLocaleDateString("de-DE",{timeZone:"Europe/Berlin",day:"2-digit",month:"2-digit"}),time=date.toLocaleTimeString("de-DE",{timeZone:"Europe/Berlin",hour:"2-digit",minute:"2-digit"});
       row.setAttribute("aria-label",`${comp.name}: ${day} ${time}, ${match.team1.teamName} gegen ${match.team2.teamName}`);
-      row.append(logo(comp.logo,comp.name,"bvb-competition-logo",comp.code),el("time",`${day} ${time}`,"bvb-kickoff"),teamLabel(match.team1,true),el("span","–","bvb-versus"),teamLabel(match.team2,true));matchList.append(row);
+      row.append(logo(comp.logo,comp.name,`bvb-competition-logo bvb-competition-${comp.code.toLowerCase()}`,comp.code),el("time",`${day} ${time}`,"bvb-kickoff"),teamLabel(match.team1,true),el("span","–","bvb-versus"),teamLabel(match.team2,true));matchList.append(row);
     }parent.append(matchList);
     parent.append(el("h4",`Bundesliga ${cache.season}/${String(cache.season+1).slice(-2)}`));
     if(cache.errors[1])parent.append(el("p","Tabelle konnte nicht aktualisiert werden. Vorhandene Daten bleiben sichtbar.","module-muted"));

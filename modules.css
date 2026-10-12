@@ -196,10 +196,12 @@
 .bvb-matches { overflow-x: auto; }
 .bvb-match { display: flex; align-items: center; gap: 5px; white-space: nowrap; min-width: max-content; font-size: .7rem; }
 .bvb-competition-logo, .bvb-team-logo { display: inline-flex; position: relative; align-items: center; justify-content: center; width: 22px; height: 22px; flex: 0 0 22px; }
-.bvb-competition-logo { background: #f3f3f3; border-radius: 3px; color: #222; }
+.bvb-competition-logo { width: 30px; height: 30px; flex-basis: 30px; background: transparent; color: #eee; }
 .bvb-competition-logo img, .bvb-team-logo img { position: absolute; inset: 0; width: 22px; height: 22px; object-fit: contain; filter: none; }
+.bvb-competition-logo img { width: 100%; height: 100%; }
+.bvb-competition-cl img { filter: brightness(0) invert(1); }
 .bvb-logo-fallback { font-size: 8px; font-weight: bold; }
-.bvb-kickoff { font-variant-numeric: tabular-nums; color: #bfc3c7; }
+.bvb-kickoff { font-size: .85rem; font-variant-numeric: tabular-nums; color: #e1e4e7; }
 .bvb-team { display: inline-flex; align-items: center; gap: 3px; }
 .bvb-team-name { max-width: 74px; overflow: hidden; text-overflow: ellipsis; }
 
@@ -210,7 +212,7 @@
 .bvb-team { flex: 1 1 0; min-width: 0; }
 .bvb-team-name { max-width: none; min-width: 0; }
 .bvb-kickoff, .bvb-versus { flex-shrink: 0; }
-.bvb-match { display: grid; grid-template-columns: 22px max-content minmax(0, 1fr) 8px minmax(0, 1fr); }
+.bvb-match { display: grid; grid-template-columns: 30px max-content minmax(0, 1fr) 8px minmax(0, 1fr); }
 .bvb-match .bvb-kickoff { margin-right: 8px; }
 .bvb-match .bvb-team { min-width: 0; }
 .bvb-match .bvb-team:nth-child(3) { justify-content: flex-end; }
