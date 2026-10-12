@@ -49,3 +49,4 @@ Kalender: `supabase/calendar.sql` ausführen. Ein Klick auf das Datum öffnet di
 Das BVB-Modul verwendet Daten von [OpenLigaDB](https://www.openligadb.de/) unter der [Open Database License (ODbL)](https://www.openligadb.de/lizenz).
 
 Wappen: Paderborn und Union Berlin verwenden die SVG-Dateien [SC Paderborn 07](https://commons.wikimedia.org/wiki/File:SC_Paderborn_07_Logo_new.svg) und [1. FC Union Berlin](https://commons.wikimedia.org/wiki/File:1._FC_Union_Berlin_Logo.svg) von Wikimedia Commons (Public Domain laut Dateiseiten). Sabah verwendet das Wappen der [offiziellen Vereinsseite](https://sabahfc.az/). Andere Vereinswappen stammen aus der Spieldatenquelle. Vereinsmarken gehören den jeweiligen Rechteinhabern.
+Die weiteren 16 Bundesliga-Wappen verwenden die aktuellen SVG-Dateien von [FootyLogos.com](https://www.footylogos.com/competition/bundesliga). Bei einem Ladefehler wird einmalig das Wappen aus OpenLigaDB versucht; danach bleibt das Vereinskürzel sichtbar.

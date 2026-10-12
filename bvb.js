@@ -3,6 +3,23 @@
   let cache = null, pending = null;
   const el = (tag,text,cls) => { const n=document.createElement(tag); if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n; };
   const isBVB = team => Number(team?.teamId ?? team?.teamInfoId) === 7 && !/\b(?:ii|u\s?-?\d{2}|frauen|women|jugend|youth|amateur|reserve)\b/i.test(team?.teamName || "");
+  const clubCrests = [
+    [/bayern/i,"bayern-munich"], [/dortmund/i,"borussia-dortmund"],
+    [/leverkusen/i,"bayer-leverkusen",true], [/leipzig/i,"rb-leipzig",true],
+    [/freiburg/i,"sc-freiburg"], [/augsburg/i,"fc-augsburg"],
+    [/werder|bremen/i,"werder-bremen"], [/mainz/i,"mainz-05"],
+    [/elversberg/i,"sv-elversberg"], [/stuttgart/i,"vfb-stuttgart"],
+    [/hamburg|\bhsv\b/i,"hamburger-sv",true], [/schalke/i,"schalke-04"],
+    [/eintracht.*frankfurt/i,"eintracht-frankfurt"], [/k[oö]ln|koeln/i,"1-fc-koln"],
+    [/hoffenheim/i,"tsg-hoffenheim"], [/gladbach/i,"borussia-monchengladbach"]
+  ];
+  function clubCrest(name) {
+    if(/paderborn/i.test(name))return {url:"https://upload.wikimedia.org/wikipedia/commons/6/67/SC_Paderborn_07_Logo_new.svg",wide:true};
+    if(/union.*berlin/i.test(name))return {url:"https://upload.wikimedia.org/wikipedia/commons/4/44/1._FC_Union_Berlin_Logo.svg",wide:true};
+    if(/\bsabah\b/i.test(name))return {url:"https://sabahfc.az/static/dist/img/SABAH%20FC%20LOGO%201.png"};
+    const club=clubCrests.find(([pattern])=>pattern.test(name));
+    return club?{url:`https://assets.footylogos.com/logos/${club[1]}/${club[1]}-logo-footylogos.svg`,wide:!!club[2]}:null;
+  }
   function competition(match) {
     const name = `${match.leagueName || ""} ${match.leagueShortcut || ""}`;
     if (/women|frauen|youth|jugend|junior|u-?\d{2}|regionalliga|(?:2|3)\.\s*bundesliga/i.test(name)) return null;
@@ -11,19 +28,17 @@
     if (/bundesliga|(?:^|\s)bl1(?:\s|$)/i.test(name)) return {code:"BL",name:"Bundesliga",logo:"https://a.espncdn.com/i/leaguelogos/soccer/500/10.png"};
     return null;
   }
-  function logo(url,label,cls,fallback) {
+  function logo(url,label,cls,fallback,backupUrl) {
     const wrap=el("span",undefined,cls);wrap.setAttribute("title",label);
     const text=el("span",fallback,"bvb-logo-fallback");wrap.append(text);
-    if(typeof url==="string" && /^https:\/\//i.test(url)){const img=el("img");img.src=url;img.alt=label;img.width=22;img.height=22;img.loading="lazy";img.referrerPolicy="no-referrer";img.addEventListener("load",()=>{text.className="hidden";});img.addEventListener("error",()=>{img.className="hidden";text.className="bvb-logo-fallback";});wrap.append(img);}
+    if(typeof url==="string" && /^https:\/\//i.test(url)){const img=el("img");img.src=url;img.alt=label;img.width=22;img.height=22;img.loading="lazy";img.referrerPolicy="no-referrer";let usedBackup=false;img.addEventListener("load",()=>{text.className="hidden";});img.addEventListener("error",()=>{if(!usedBackup&&typeof backupUrl==="string"&&/^https:\/\//i.test(backupUrl)&&backupUrl!==url){usedBackup=true;img.src=backupUrl;return;}img.className="hidden";text.className="bvb-logo-fallback";});wrap.append(img);}
     return wrap;
   }
   function teamLabel(team) {
     const name=team?.teamName || "Unbekannter Verein",node=el("span",undefined,"bvb-team");node.setAttribute("title",name);
     // Override missing or low-quality provider crests in fixtures and standings.
-    const crest=/paderborn/i.test(name)?{url:"https://upload.wikimedia.org/wikipedia/commons/6/67/SC_Paderborn_07_Logo_new.svg",wide:true}:
-      /union.*berlin/i.test(name)?{url:"https://upload.wikimedia.org/wikipedia/commons/4/44/1._FC_Union_Berlin_Logo.svg",wide:true}:
-      /\bsabah\b/i.test(name)?{url:"https://sabahfc.az/static/dist/img/SABAH%20FC%20LOGO%201.png"}:null;
-    node.append(logo(crest?.url||team?.teamIconUrl,name,`bvb-team-logo${crest?.wide?" bvb-team-logo-wide":""}`,name.slice(0,3).toUpperCase()),el("span",team?.shortName||name,"bvb-team-name"));return node;
+    const crest=clubCrest(name);
+    node.append(logo(crest?.url||team?.teamIconUrl,name,`bvb-team-logo${crest?.wide?" bvb-team-logo-wide":""}`,name.slice(0,3).toUpperCase(),team?.teamIconUrl),el("span",team?.shortName||name,"bvb-team-name"));return node;
   }
   const kickoff = match => { const utc=match.matchDateTimeUTC; return utc ? new Date(/[zZ]|[+-]\d\d:\d\d$/.test(utc)?utc:`${utc}Z`) : null; };
   const season = () => { const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Berlin",year:"numeric",month:"numeric"}).formatToParts(new Date());const year=Number(parts.find(p=>p.type==="year").value),month=Number(parts.find(p=>p.type==="month").value);return month>=7?year:year-1; };
