@@ -215,7 +215,7 @@
 .bvb-match .bvb-team { min-width: 0; }
 .bvb-match .bvb-team:nth-child(3) { justify-content: flex-end; }
 .bvb-match .bvb-versus { text-align: center; }
-.bvb-match .bvb-team-name { display: none; }
+.bvb-match .bvb-team-name { display: inline; flex-shrink: 0; }
 @media (min-width: 1101px) {
   .dashboard-right-rail:has([data-module="bvb"]) { width: max(340px, min(var(--right-note-width, 280px), max(280px, calc((100vw - 700px) / 2)))); }
 }

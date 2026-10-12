@@ -34,11 +34,19 @@
     if(typeof url==="string" && /^https:\/\//i.test(url)){const img=el("img");img.src=url;img.alt=label;img.width=22;img.height=22;img.loading="lazy";img.referrerPolicy="no-referrer";let usedBackup=false;img.addEventListener("load",()=>{text.className="hidden";});img.addEventListener("error",()=>{if(!usedBackup&&typeof backupUrl==="string"&&/^https:\/\//i.test(backupUrl)&&backupUrl!==url){usedBackup=true;img.src=backupUrl;return;}img.className="hidden";text.className="bvb-logo-fallback";});wrap.append(img);}
     return wrap;
   }
-  function teamLabel(team) {
+  function teamCode(team) {
+    const name=team?.teamName||"";
+    if(/paderborn/i.test(name))return "SCP";
+    if(/union.*berlin/i.test(name))return "FCU";
+    const club=clubCrests.find(([pattern])=>pattern.test(name));
+    const codes={"bayern-munich":"FCB","borussia-dortmund":"BVB","bayer-leverkusen":"B04","rb-leipzig":"RBL","sc-freiburg":"SCF","fc-augsburg":"FCA","werder-bremen":"SVW","mainz-05":"M05","sv-elversberg":"ELV","vfb-stuttgart":"VFB","hamburger-sv":"HSV","schalke-04":"S04","eintracht-frankfurt":"SGE","1-fc-koln":"KOE","tsg-hoffenheim":"TSG","borussia-monchengladbach":"BMG"};
+    return codes[club?.[1]]||team?.shortName?.match(/^[a-z0-9]{3}$/i)?.[0]?.toUpperCase()||name.replace(/^(?:FC|FK|SC|SV|TSG)\s+/i,"").slice(0,3).toUpperCase()||"???";
+  }
+  function teamLabel(team,compact=false) {
     const name=team?.teamName || "Unbekannter Verein",node=el("span",undefined,"bvb-team");node.setAttribute("title",name);
     // Override missing or low-quality provider crests in fixtures and standings.
     const crest=clubCrest(name);
-    node.append(logo(crest?.url||team?.teamIconUrl,name,`bvb-team-logo${crest?.wide?" bvb-team-logo-wide":""}`,name.slice(0,3).toUpperCase(),team?.teamIconUrl),el("span",team?.shortName||name,"bvb-team-name"));return node;
+    node.append(logo(crest?.url||team?.teamIconUrl,name,`bvb-team-logo${crest?.wide?" bvb-team-logo-wide":""}`,teamCode(team),team?.teamIconUrl),el("span",compact?teamCode(team):team?.shortName||name,"bvb-team-name"));return node;
   }
   const kickoff = match => { const utc=match.matchDateTimeUTC; return utc ? new Date(/[zZ]|[+-]\d\d:\d\d$/.test(utc)?utc:`${utc}Z`) : null; };
   const season = () => { const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Berlin",year:"numeric",month:"numeric"}).formatToParts(new Date());const year=Number(parts.find(p=>p.type==="year").value),month=Number(parts.find(p=>p.type==="month").value);return month>=7?year:year-1; };
@@ -65,7 +73,7 @@
       const row=el("article",undefined,"bvb-match"),comp=competition(match),date=kickoff(match);
       const day=date.toLocaleDateString("de-DE",{timeZone:"Europe/Berlin",day:"2-digit",month:"2-digit"}),time=date.toLocaleTimeString("de-DE",{timeZone:"Europe/Berlin",hour:"2-digit",minute:"2-digit"});
       row.setAttribute("aria-label",`${comp.name}: ${day} ${time}, ${match.team1.teamName} gegen ${match.team2.teamName}`);
-      row.append(logo(comp.logo,comp.name,"bvb-competition-logo",comp.code),el("time",`${day} ${time}`,"bvb-kickoff"),teamLabel(match.team1),el("span","–","bvb-versus"),teamLabel(match.team2));matchList.append(row);
+      row.append(logo(comp.logo,comp.name,"bvb-competition-logo",comp.code),el("time",`${day} ${time}`,"bvb-kickoff"),teamLabel(match.team1,true),el("span","–","bvb-versus"),teamLabel(match.team2,true));matchList.append(row);
     }parent.append(matchList);
     parent.append(el("h4",`Bundesliga ${cache.season}/${String(cache.season+1).slice(-2)}`));
     if(cache.errors[1])parent.append(el("p","Tabelle konnte nicht aktualisiert werden. Vorhandene Daten bleiben sichtbar.","module-muted"));
