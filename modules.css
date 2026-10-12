@@ -221,13 +221,11 @@
   .dashboard-right-rail:has([data-module="bvb"]) { width: min(calc(100% - 24px), 340px); }
 }
 
-.bvb-table .bvb-team { display: flex; gap: 6px; }
-.bvb-table .bvb-team-logo { width: 20px; height: 20px; flex-basis: 20px; }
-.bvb-table .bvb-team-logo img { width: 20px; height: 20px; }
-.bvb-team-logo.bvb-team-logo-wide { width: 30px; flex-basis: 30px; }
-.bvb-team-logo.bvb-team-logo-wide img { width: 100%; }
-.bvb-table .bvb-team-logo.bvb-team-logo-wide { width: 30px; flex-basis: 30px; }
-.bvb-table .bvb-team-logo.bvb-team-logo-wide img { width: 100%; }
+.bvb-team-logo { width: 32px; height: 28px; flex-basis: 32px; }
+.bvb-team-logo img { width: 100%; height: 100%; }
+.bvb-table .bvb-team { display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: center; gap: 6px; }
+.bvb-table .bvb-team-logo { width: 36px; height: 28px; }
+.bvb-table .bvb-team-name { white-space: nowrap; }
 
 /* Side modules must never change the position or width of the central dashboard. */
 body .dashboard-layout,
