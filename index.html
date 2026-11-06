@@ -44,6 +44,7 @@
           type="search"
           name="q"
           id="search-input"
+          autofocus
           class="search-input"
           placeholder=" "
           autocomplete="off"
@@ -89,7 +90,7 @@
     <button id="lock-btn" class="header-icon-btn" type="button" title="Anmelden" aria-label="Anmelden">🔒</button>
   </div>
 
-  <button class="version-info" id="version-info" type="button">v2.9.16</button>
+  <button class="version-info" id="version-info" type="button">v2.9.17</button>
 
   <div id="login-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="login-title">
     <button class="modal-bg" type="button" data-close-modal aria-label="Schließen"></button>
@@ -171,6 +172,10 @@
         <button type="button" class="close-btn" data-close-modal aria-label="Schließen">&times;</button>
       </div>
       <div class="modal-body">
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.9.17</span><time class="changelog-date" datetime="2026-11-06">06.11.2026</time></div>
+          <div class="changelog-details">Das Suchfeld erhält beim Öffnen der Seite automatisch den Fokus, sodass direkt geschrieben werden kann.</div>
+        </div>
         <div class="changelog-block">
           <div class="changelog-version"><span>v2.9.16</span><time class="changelog-date" datetime="2026-10-12">12.10.2026</time></div>
           <div class="changelog-details">Datum und Uhrzeit größer darstellen. Bundesliga, Champions League und DFB-Pokal erhalten geprüfte SVG-Logos in größerer Darstellung mit passendem Kontrast.</div>
