@@ -1,6 +1,10 @@
 // API keys stay in Supabase Secrets. No upstream response body is returned to clients.
 const PUBLISHABLE = "sb_publishable_iTWeyhfns_LHBF7KGrQCRw_cTFi1Dth";
-const ORIGIN = "https://gallardo1337.github.io";
+const ALLOWED_ORIGINS = new Set([
+  "https://gallardo1337.io",
+  "https://www.gallardo1337.io",
+  "https://gallardo1337.github.io",
+]);
 const resultCache = new Map();
 class InventoryError extends Error {
   constructor(message, status = 502) { super(message); this.status = status; }
@@ -12,8 +16,11 @@ async function readJSON(url, headers = {}, options = {}) {
   return { response, data };
 }
 async function inventoryHandler(req) {
-  const cors = { "Access-Control-Allow-Origin": ORIGIN, "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info", "Access-Control-Allow-Methods": "POST, OPTIONS", "Cache-Control": "no-store", "Content-Type": "application/json", "Vary": "Origin" };
+  const origin = req.headers.get("Origin");
+  const cors = { "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info", "Access-Control-Allow-Methods": "POST, OPTIONS", "Cache-Control": "no-store", "Content-Type": "application/json", "Vary": "Origin" };
+  if (ALLOWED_ORIGINS.has(origin)) cors["Access-Control-Allow-Origin"] = origin;
   const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: cors });
+  if (origin && !ALLOWED_ORIGINS.has(origin)) return reply({ error: "Diese Webseiten-Adresse ist nicht zugelassen." }, 403);
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   if (req.method !== "POST") return reply({ error: "Bitte POST verwenden." }, 405);
   try {

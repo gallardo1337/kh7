@@ -14,9 +14,23 @@ function setup(options = {}) {
   return new Response(options.html ?? html, { status: options.status ?? 200 });
  }, Deno: { serve: fn => handler = fn, env: { get: name => { assert.equal(name, 'SUPABASE_URL'); return 'https://test.supabase.co'; } } } };
  vm.createContext(context); vm.runInContext(code, context);
- return { parse: context.parseSAValue, count: () => pageCalls, call: (profile = id, token = 'Bearer '+ 'a'.repeat(30)) => handler(new Request('https://example.test', { method: 'POST', headers: token ? { Authorization: token } : {}, body: JSON.stringify({ profile, currency:'EUR' }) })) };
+ return { handle: handler, parse: context.parseSAValue, count: () => pageCalls, call: (profile = id, token = 'Bearer '+ 'a'.repeat(30)) => handler(new Request('https://example.test', { method: 'POST', headers: token ? { Authorization: token } : {}, body: JSON.stringify({ profile, currency:'EUR' }) })) };
 }
 (async () => {
+ for (const origin of ['https://gallardo1337.io','https://www.gallardo1337.io','https://gallardo1337.github.io']) {
+  const app = setup();
+  const preflight = await app.handle(new Request('https://example.test', {method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,apikey,content-type'}}));
+  assert.equal(preflight.status,204); assert.equal(preflight.headers.get('Access-Control-Allow-Origin'),origin);
+  for (const header of ['authorization','apikey','content-type']) assert(preflight.headers.get('Access-Control-Allow-Headers').includes(header));
+  const unauthorized = await app.handle(new Request('https://example.test',{method:'POST',headers:{Origin:origin},body:'{}'}));
+  assert.equal(unauthorized.status,401); assert.equal(unauthorized.headers.get('Access-Control-Allow-Origin'),origin); assert.equal(app.count(),0);
+  const success = await app.handle(new Request('https://example.test',{method:'POST',headers:{Origin:origin,Authorization:'Bearer '+'a'.repeat(30)},body:JSON.stringify({profile:id,currency:'EUR'})}));
+  assert.equal(success.status,200); assert.equal(success.headers.get('Access-Control-Allow-Origin'),origin);
+ }
+ for (const origin of ['https://evil.test','https://gallardo1337.io.evil.test','null']) {
+  const app=setup(); const response=await app.handle(new Request('https://example.test',{method:'OPTIONS',headers:{Origin:origin}}));
+  assert.equal(response.status,403); assert.equal(response.headers.get('Access-Control-Allow-Origin'),null); assert.equal(app.count(),0);
+ }
  assert.equal((await setup().call(id, '')).status, 401);
  const denied = setup({ denied: true }); assert.equal((await denied.call()).status, 403); assert.equal(denied.count(), 0);
  assert.equal((await setup().call('https://evil.test/')).status, 400);

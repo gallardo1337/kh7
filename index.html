@@ -5,8 +5,8 @@
   <title>Dashboard KH7</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#1a1a1a">
-  <link rel="stylesheet" href="style.css?v=2.9.18">
-  <link rel="stylesheet" href="modules.css?v=2.9.18">
+  <link rel="stylesheet" href="style.css?v=2.9.19">
+  <link rel="stylesheet" href="modules.css?v=2.9.19">
   <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="shortcut icon" href="favicon.ico">
@@ -90,7 +90,7 @@
     <button id="lock-btn" class="header-icon-btn" type="button" title="Anmelden" aria-label="Anmelden">🔒</button>
   </div>
 
-  <button class="version-info" id="version-info" type="button">v2.9.18</button>
+  <button class="version-info" id="version-info" type="button">v2.9.19</button>
 
   <div id="login-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="login-title">
     <button class="modal-bg" type="button" data-close-modal aria-label="Schließen"></button>
@@ -172,6 +172,10 @@
         <button type="button" class="close-btn" data-close-modal aria-label="Schließen">&times;</button>
       </div>
       <div class="modal-body">
+        <div class="changelog-block">
+          <div class="changelog-version"><span>v2.9.19</span><time class="changelog-date" datetime="2026-11-07">07.11.2026</time></div>
+          <div class="changelog-details">Inventarwerte lassen sich auch über gallardo1337.io und www.gallardo1337.io abrufen: Browser-Freigabe des Inventardienstes an die neue Domain angepasst.</div>
+        </div>
         <div class="changelog-block">
           <div class="changelog-version"><span>v2.9.18</span><time class="changelog-date" datetime="2026-11-07">07.11.2026</time></div>
           <div class="changelog-details">Kalender und Module erkennen die Anmeldung auch nach dem Domainwechsel: versionierte Dateien verhindern das Laden veralteter Programmteile aus dem Browser-Cache.</div>
@@ -344,11 +348,11 @@
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js" integrity="sha384-yiVMs0R/Jyz7OhoXa/DsEMUSBLjEhr/QJta2ONO+zB6I8/GmNg/7AUFrZmAJV7KV" crossorigin="anonymous"></script>
-  <script src="config.js?v=2.9.18"></script>
-  <script src="app.js?v=2.9.18" defer></script>
-  <script src="bvb.js?v=2.9.18" defer></script>
-  <script src="modules.js?v=2.9.18" defer></script>
-  <script src="holidays.js?v=2.9.18" defer></script>
-  <script src="calendar.js?v=2.9.18" defer></script>
+  <script src="config.js?v=2.9.19"></script>
+  <script src="app.js?v=2.9.19" defer></script>
+  <script src="bvb.js?v=2.9.19" defer></script>
+  <script src="modules.js?v=2.9.19" defer></script>
+  <script src="holidays.js?v=2.9.19" defer></script>
+  <script src="calendar.js?v=2.9.19" defer></script>
 </body>
 </html>
